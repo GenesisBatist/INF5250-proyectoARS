@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Autorizaciones Médicas</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.0.12/index.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../dist/css/adminlte.css">
+  <link rel="stylesheet" href="../dist/css/ars-pro-theme.css">
+  <link rel="stylesheet" href="../dist/css/ars-custom.css">
+  <style>
+    body{background:#eef1f4}
+    .section-title{font-size:1.1rem;font-weight:700;margin-bottom:1rem;color:#24415c}
+    .card-soft{border:1px solid rgba(0,0,0,.08);box-shadow:0 .25rem 1rem rgba(0,0,0,.04)}
+    .summary-chip{background:#f8f9fa;border:1px solid #dee2e6;border-radius:.65rem;padding:.65rem .85rem;height:100%}
+    .summary-chip .label{font-size:.82rem;color:#6c757d}
+    .summary-chip .value{font-weight:700}
+    .auth-header{background:linear-gradient(90deg,#1f4c94,#1aa155);color:#fff;border-radius:.65rem;padding:.75rem 1rem;font-weight:700}
+    .mini-table thead th{font-size:.85rem;white-space:nowrap}
+    .table td,.table th{vertical-align:middle}
+    .field-note{font-size:.8rem;color:#6c757d}
+    .brand-logo-mini{width:32px;height:32px;object-fit:contain;margin-right:.5rem}
+    .clinic-breakdown-card{background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%)}
+    @media (max-width: 991.98px){ .w-auto-lg{width:100%!important} }
+  </style>
+</head>
+<body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
+<div class="app-wrapper">
+  <nav class="app-header navbar navbar-expand bg-body">
+    <div class="container-fluid">
+      <a class="navbar-brand anchor-home brand-text-strong" href="#" data-home-link>Sistema ARS Salud</a>
+      <div class="ms-auto d-flex align-items-center gap-2">
+        <span class="header-pill" id="headerRoleLabel">Autorizaciones</span>
+        <span id="userName" class="fw-semibold"></span>
+        <button class="btn btn-outline-secondary btn-sm" onclick="ARSAuth.logout()">Salir</button>
+      </div>
+    </div>
+  </nav>
+
+  <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
+    <div class="sidebar-brand">
+      <a href="#" class="brand-link" data-home-link>
+        <img src="../dist/assets/img/AdminLTELogo.png" alt="Logo" class="brand-logo-mini">
+        <span class="brand-text fw-light">Sistema ARS</span>
+      </a>
+    </div>
+    <div class="sidebar-wrapper">
+      <nav class="mt-2">
+        <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu" id="sidebarMenuAutorizaciones"></ul>
+      </nav>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <div class="app-content">
+      <div class="container-fluid py-4 px-3 px-lg-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+          <div>
+            <h2 class="mb-1">Autorizaciones Médicas</h2>
+            <div class="text-muted">Solicitud, validación automática en clínica y consulta operativa para agente</div>
+          </div>
+          <a href="javascript:history.back()" class="btn btn-secondary">Volver</a>
+        </div>
+
+        <div id="rolMessage" class="alert alert-info card-soft"></div>
+
+        <div class="auth-header mb-3">Datos del Paciente y del Prestador</div>
+
+        <div class="card card-soft mb-4">
+          <div class="card-header">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+              <span>Listado de autorizaciones</span>
+              <input type="text" class="form-control w-auto w-auto-lg" id="buscarTablaAutorizaciones" placeholder="Buscar por afiliado, cédula, clínica o servicio">
+            </div>
+          </div>
+          <div class="card-body table-responsive">
+            <table class="table table-bordered table-striped align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Afiliado</th>
+                  <th>Cédula</th>
+                  <th>Clínica</th>
+                  <th>Servicio</th>
+                  <th>Cobertura</th>
+                  <th>Estado</th>
+                  <th>Comentario / Acción</th>
+                </tr>
+              </thead>
+              <tbody id="tablaAutorizaciones"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="clinicaFormWrap" class="card card-soft mb-4 d-none">
+          <div class="card-body">
+            <form id="formClinicaAutorizacion">
+              <div class="row g-3 mb-3">
+                <div class="col-12 col-lg-3">
+                  <label class="form-label">Buscar afiliado por cédula *</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" id="buscarCedulaAut" placeholder="001-0000000-0">
+                    <button type="button" class="btn btn-primary" id="btnBuscarAfiliadoAut">Buscar</button>
+                  </div>
+                  <div class="field-note">Puedes buscar por número de cédula para llenar más rápido la solicitud.</div>
+                </div>
+                <div class="col-12 col-lg-3">
+                  <label class="form-label">Afiliado *</label>
+                  <select class="form-select" id="clinicaAfiliadoId" name="clinicaAfiliadoId" required></select>
+                </div>
+                <div class="col-12 col-md-6 col-lg-2">
+                  <label class="form-label">Número de afiliado</label>
+                  <input type="text" class="form-control" id="autNumeroAfiliado" readonly>
+                </div>
+                <div class="col-12 col-md-6 col-lg-2">
+                  <label class="form-label">Póliza / Plan</label>
+                  <input type="text" class="form-control" id="autPlanAfiliado" readonly>
+                </div>
+                <div class="col-12 col-md-6 col-lg-2">
+                  <label class="form-label">Cobertura disponible</label>
+                  <input type="text" class="form-control" id="autCoberturaResumen" readonly>
+                </div>
+              </div>
+
+              <div class="row g-3 mb-3">
+                <div class="col-12 col-md-6 col-lg-3">
+                  <label class="form-label">Clínica / Hospital</label>
+                  <input type="text" class="form-control" id="autClinicaNombre" readonly>
+                </div>
+                <div class="col-12 col-md-6 col-lg-3">
+                  <label class="form-label">Doctor solicitante *</label>
+                  <input type="text" class="form-control" name="doctor" required>
+                </div>
+                <div class="col-12 col-md-6 col-lg-2">
+                  <label class="form-label">Especialidad *</label>
+                  <input type="text" class="form-control" name="especialidad" required>
+                </div>
+                <div class="col-12 col-md-6 col-lg-2">
+                  <label class="form-label">Prioridad *</label>
+                  <select class="form-select" name="prioridad" required>
+                    <option value="normal">Normal</option>
+                    <option value="urgente">Urgente</option>
+                    <option value="emergencia">Emergencia</option>
+                  </select>
+                </div>
+                <div class="col-12 col-md-6 col-lg-2">
+                  <label class="form-label">Fecha del servicio *</label>
+                  <input type="date" class="form-control" name="fechaServicio" required>
+                </div>
+              </div>
+
+              <div class="card bg-light border-0 mb-3">
+                <div class="card-body">
+                  <div class="section-title mb-2">Detalle de la autorización</div>
+                  <div class="table-responsive">
+                    <table class="table table-bordered mini-table align-middle mb-0">
+                      <thead>
+                        <tr>
+                          <th style="min-width:220px">Servicio solicitado *</th>
+                          <th style="min-width:180px">Cobertura según póliza</th>
+                          <th style="min-width:150px">Monto estimado *</th>
+                          <th style="min-width:180px">Estado preliminar</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>
+                            <select class="form-select" name="servicio" id="servicioSolicitado" required></select>
+                          </td>
+                          <td><input type="text" class="form-control" id="coberturaServicio" readonly></td>
+                          <td>
+                            <div class="input-group">
+                              <span class="input-group-text">RD$</span>
+                              <input type="number" class="form-control" name="monto" id="montoEstimado" min="0" step="0.01" required>
+                            </div>
+                          </td>
+                          <td><input type="text" class="form-control" id="estadoPreliminar" readonly></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row g-3">
+                <div class="col-12 col-lg-8">
+                  <label class="form-label">Diagnóstico *</label>
+                  <textarea class="form-control" name="diagnostico" rows="3" required></textarea>
+                </div>
+                <div class="col-12 col-lg-4">
+                  <label class="form-label">Observación médica</label>
+                  <textarea class="form-control" name="observacionMedica" rows="3"></textarea>
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-end mt-3">
+                <button class="btn btn-success">Enviar solicitud de autorización</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div id="agenteDesgloseWrap" class="d-none">
+          <div class="card card-soft clinic-breakdown-card">
+            <div class="card-header">
+              <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                  <div class="fw-semibold">Desglose por clínica</div>
+                  <small class="text-muted">Consulta separada por clínica para revisión y pago mensual.</small>
+                </div>
+                <input type="text" class="form-control w-auto w-auto-lg" id="buscarClinicaDesglose" placeholder="Buscar clínica, ejemplo: UASD">
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="row g-3 mb-3">
+                <div class="col-12 col-md-6 col-xl-3"><div class="summary-chip"><div class="label">Clínicas encontradas</div><div class="value" id="resClinicasEncontradas">0</div></div></div>
+                <div class="col-12 col-md-6 col-xl-3"><div class="summary-chip"><div class="label">Autorizaciones mostradas</div><div class="value" id="resAutorizacionesMostradas">0</div></div></div>
+                <div class="col-12 col-md-6 col-xl-3"><div class="summary-chip"><div class="label">Aprobadas</div><div class="value" id="resAprobadasDesglose">0</div></div></div>
+                <div class="col-12 col-md-6 col-xl-3"><div class="summary-chip"><div class="label">Pendientes / Otras</div><div class="value" id="resPendientesDesglose">0</div></div></div>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th>Clínica</th>
+                      <th>ID</th>
+                      <th>Afiliado</th>
+                      <th>Cédula</th>
+                      <th>Servicio</th>
+                      <th>Cobertura</th>
+                      <th>Estado</th>
+                      <th>Comentario</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tablaDesgloseClinica"></tbody>
+                </table>
+              </div>
+              <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+                <div class="text-muted small" id="infoPaginacionDesglose">Mostrando 0-0 de 0 autorizaciones</div>
+                <div class="d-flex align-items-center gap-2">
+                  <button type="button" class="btn btn-outline-secondary btn-sm" id="btnPrevDesglose">Anterior</button>
+                  <span class="fw-semibold small" id="pageDesgloseLabel">Página 1 de 1</span>
+                  <button type="button" class="btn btn-outline-secondary btn-sm" id="btnNextDesglose">Siguiente</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../dist/js/auth-rol.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  try {
+    if (window.ARSAuth && typeof ARSAuth.getCurrentUser === 'function') {
+      const user = ARSAuth.getCurrentUser();
+      const el = document.getElementById('userName');
+      if (user && el) el.textContent = user.nombre || user.username || '';
+    }
+  } catch(e) {}
+});
+</script>
+<script src="../dist/js/autorizaciones.js"></script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+PARCHE CLINICA - PAGINACION Y BOTON AUTORIZAR
+
+Reemplaza estos archivos:
+- AdminLTE-4.0.0-rc7/pages/clinica-dashboard.html
+- AdminLTE-4.0.0-rc7/dist/js/clinica-panel.js
+- AdminLTE-4.0.0-rc7/pages/crear-paciente-clinica.html
+- AdminLTE-4.0.0-rc7/dist/js/crear-paciente-clinica.js
+
+Qué agrega:
+1) En Dashboard > Pacientes agendados:
+   - botones Anterior y Siguiente debajo de la lista
+   - máximo 10 registros por página
+   - botón Autorizar en Acciones
+
+2) En Crear paciente > Pacientes agendados:
+   - columna Acciones con botón Autorizar
+   - botones Anterior y Siguiente debajo de la lista
+   - máximo 10 registros por página
+
+3) El botón Autorizar:
+   - guarda la cita seleccionada en localStorage con la clave:
+     ars_cita_para_proceso
+   - abre:
+     servicios-clinica.html?citaId=...
+
+Después de reemplazar, haz Ctrl + F5.

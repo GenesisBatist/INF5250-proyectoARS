@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard Afiliado</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.0.12/index.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../dist/css/adminlte.css">
+  <link rel="stylesheet" href="../dist/css/ars-pro-theme.css">
+  <link rel="stylesheet" href="../dist/css/ars-custom.css">
+  <style>
+    .brand-logo-mini{width:32px;height:32px;object-fit:contain;margin-right:.5rem}
+    .card-shadow-soft{box-shadow:0 .5rem 1rem rgba(0,0,0,.08)}
+    .badge-soft{display:inline-flex;align-items:center;padding:.38rem .7rem;border-radius:999px;font-size:.74rem;font-weight:700;letter-spacing:.02em}
+    .badge-soft.approved{background:rgba(25,135,84,.15);color:#146c43}
+    .badge-soft.pending{background:rgba(255,193,7,.16);color:#997404}
+    .badge-soft.rejected{background:rgba(220,53,69,.14);color:#b02a37}
+  </style>
+</head>
+<body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
+<div class="app-wrapper">
+  <nav class="app-header navbar navbar-expand bg-body">
+    <div class="container-fluid">
+      <a class="navbar-brand anchor-home brand-text-strong" href="afiliado-dashboard.html" data-home-link>Sistema ARS Salud</a>
+      <div class="ms-auto d-flex align-items-center gap-2">
+        <span class="header-pill" id="headerRoleLabel">Rol Afiliado</span>
+        <span id="userName" class="fw-semibold"></span>
+        <button class="btn btn-outline-secondary btn-sm" onclick="ARSAuth.logout()">Salir</button>
+      </div>
+    </div>
+  </nav>
+
+  <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
+    <div class="sidebar-brand">
+      <a href="afiliado-dashboard.html" class="brand-link" data-home-link>
+        <img src="../dist/assets/img/AdminLTELogo.png" alt="Logo" class="brand-logo-mini">
+        <span class="brand-text fw-light">Afiliado</span>
+      </a>
+    </div>
+    <div class="sidebar-wrapper">
+      <nav class="mt-2">
+        <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu">
+          <li class="nav-item"><a class="nav-link active" href="afiliado-dashboard.html"><i class="nav-icon bi bi-house"></i><p>Mi historial</p></a></li>
+          <li class="nav-item"><a class="nav-link" href="reclamaciones.html"><i class="nav-icon bi bi-exclamation-circle"></i><p>Mis reclamaciones</p></a></li>
+        </ul>
+      </nav>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <div class="app-content">
+      <div class="container-fluid py-4">
+        <div class="row mb-4">
+          <div class="col-12">
+            <div class="card card-shadow-soft border-0">
+              <div class="card-body d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+                <div>
+                  <h3 class="mb-1">Panel del Afiliado</h3>
+                  <p class="text-body-secondary mb-0">Consulta tu póliza, cobertura, autorizaciones y reclamaciones aprobadas con el mismo estilo del sistema principal.</p>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                  <a href="reclamaciones.html" class="btn btn-outline-primary"><i class="bi bi-exclamation-circle me-1"></i>Ir a reclamaciones</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-12 col-sm-6 col-xl-3"><div class="small-box text-bg-primary mb-0"><div class="inner"><h3 id="afiPoliza">-</h3><p>Póliza</p></div><div class="small-box-icon"><i class="bi bi-file-medical"></i></div></div></div>
+          <div class="col-12 col-sm-6 col-xl-3"><div class="small-box text-bg-success mb-0"><div class="inner"><h3 id="afiPlan">-</h3><p>Plan</p></div><div class="small-box-icon"><i class="bi bi-shield-check"></i></div></div></div>
+          <div class="col-12 col-sm-6 col-xl-3"><div class="small-box text-bg-warning mb-0"><div class="inner"><h3 id="kpiAutorizaciones">0</h3><p>Autorizaciones</p></div><div class="small-box-icon"><i class="bi bi-clipboard2-check"></i></div></div></div>
+          <div class="col-12 col-sm-6 col-xl-3"><div class="small-box text-bg-info mb-0"><div class="inner"><h3 id="kpiReclamaciones">0</h3><p>Reclamaciones válidas</p></div><div class="small-box-icon"><i class="bi bi-journal-check"></i></div></div></div>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-xl-4">
+            <div class="card card-shadow-soft h-100">
+              <div class="card-header border-0"><h3 class="card-title">Resumen personal</h3></div>
+              <div class="card-body">
+                <div class="mb-3"><strong>Nombre:</strong> <span id="afiNombre">-</span></div>
+                <div class="mb-3"><strong>Cédula:</strong> <span id="afiCedula">-</span></div>
+                <div class="mb-3"><strong>Póliza:</strong> <span id="afiPolizaMirror">-</span></div>
+                <div class="mb-3"><strong>Plan:</strong> <span id="afiPlanMirror">-</span></div>
+                <div><strong>Coberturas:</strong><div id="afiCoberturas" class="mt-2 d-flex flex-wrap gap-2"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-xl-8">
+            <div class="card card-shadow-soft mb-4">
+              <div class="card-header border-0"><h3 class="card-title">Autorizaciones recientes</h3></div>
+              <div class="card-body table-responsive">
+                <table class="table table-striped table-hover align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Clínica</th>
+                      <th>Servicio</th>
+                      <th>Cobertura</th>
+                      <th>Estado</th>
+                      <th>Fecha</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tablaAfiliadoAut"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card card-shadow-soft mb-4">
+              <div class="card-header border-0"><h3 class="card-title">Movimientos realizados en clínica</h3></div>
+              <div class="card-body table-responsive">
+                <table class="table table-striped table-hover align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Tipo</th>
+                      <th>Clínica</th>
+                      <th>Detalle</th>
+                      <th>Estado</th>
+                      <th>Fecha</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tablaAfiliadoMovimientos"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card card-shadow-soft">
+              <div class="card-header border-0"><h3 class="card-title">Reclamaciones aprobadas o comprobadas</h3></div>
+              <div class="card-body table-responsive">
+                <table class="table table-striped table-hover align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Motivo</th>
+                      <th>Detalle</th>
+                      <th>Estado</th>
+                      <th>Fecha</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tablaAfiliadoReclamaciones"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="../dist/js/adminlte.js"></script>
+<script src="../dist/js/auth-rol.js"></script>
+<script src="../dist/js/afiliado-panel.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const syncText = (fromId, toId) => {
+      const from = document.getElementById(fromId);
+      const to = document.getElementById(toId);
+      if (from && to) to.textContent = from.textContent;
+    };
+    const obs = new MutationObserver(() => {
+      syncText('afiPoliza', 'afiPolizaMirror');
+      syncText('afiPlan', 'afiPlanMirror');
+      const autRows = document.querySelectorAll('#tablaAfiliadoAut tr');
+      const recRows = document.querySelectorAll('#tablaAfiliadoReclamaciones tr');
+      const autCount = autRows.length === 1 && /No hay/i.test(autRows[0].textContent) ? 0 : autRows.length;
+      const recCount = recRows.length === 1 && /No tienes|No hay/i.test(recRows[0].textContent) ? 0 : recRows.length;
+      const autKpi = document.getElementById('kpiAutorizaciones');
+      const recKpi = document.getElementById('kpiReclamaciones');
+      if (autKpi) autKpi.textContent = String(autCount);
+      if (recKpi) recKpi.textContent = String(recCount);
+    });
+    ['afiPoliza','afiPlan','tablaAfiliadoAut','tablaAfiliadoMovimientos','tablaAfiliadoReclamaciones'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) obs.observe(el, { childList: true, subtree: true, characterData: true });
+    });
+    syncText('afiPoliza', 'afiPolizaMirror');
+    syncText('afiPlan', 'afiPlanMirror');
+  });
+</script>
+</body>
+</html>

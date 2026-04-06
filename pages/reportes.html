@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ARS Salud | Reportes</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.0.12/index.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/styles/overlayscrollbars.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../dist/css/adminlte.css">
+  <link rel="stylesheet" href="../dist/css/ars-pro-theme.css">
+  <link rel="stylesheet" href="../dist/css/estilos.css">
+  <style>
+    .toolbar-reportes{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap}
+    .toolbar-reportes .form-control,.toolbar-reportes .form-select{max-width:280px}
+    @media (max-width: 767.98px){
+      .toolbar-reportes{flex-direction:column;align-items:stretch}
+      .toolbar-reportes .form-control,.toolbar-reportes .form-select{max-width:none;width:100%}
+    }
+  </style>
+</head>
+<body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
+<div class="app-wrapper">
+  <nav class="app-header navbar navbar-expand bg-body">
+    <div class="container-fluid">
+      <ul class="navbar-nav">
+        <li class="nav-item"><a class="nav-link" data-lte-toggle="sidebar" href="#" role="button"><i class="bi bi-list"></i></a></li>
+        <li class="nav-item d-none d-md-block"><a href="agente-dashboard.html" class="nav-link">Inicio</a></li>
+      </ul>
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item dropdown user-menu">
+          <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+            <img src="../dist/assets/img/user2-160x160.jpg" class="user-image rounded-circle shadow" alt="User">
+            <span class="d-none d-md-inline" id="userName">Agente</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
+            <li class="user-header text-bg-primary">
+              <img src="../dist/assets/img/user2-160x160.jpg" class="rounded-circle shadow" alt="User">
+              <p id="userFullName">Agente ARS</p>
+            </li>
+            <li class="user-footer"><a href="#" class="btn btn-outline-secondary float-end" id="btnLogout">Cerrar sesión</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
+    <div class="sidebar-brand">
+      <a href="agente-dashboard.html" class="brand-link">
+        <img src="../dist/assets/img/AdminLTELogo.png" alt="Logo" class="brand-image opacity-75 shadow">
+        <span class="brand-text fw-light">Agente ARS</span>
+      </a>
+    </div>
+    <div class="sidebar-wrapper">
+      <nav class="mt-2">
+        <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="navigation" data-accordion="false">
+          <li class="nav-item"><a class="nav-link" href="agente-dashboard.html"><i class="nav-icon bi bi-house"></i><p>Dashboard</p></a></li>
+          <li class="nav-item"><a class="nav-link" href="afiliados.html"><i class="nav-icon bi bi-people"></i><p>Afiliados</p></a></li>
+          <li class="nav-item"><a class="nav-link" href="proveedores.html"><i class="nav-icon bi bi-hospital"></i><p>Clínicas</p></a></li>
+          <li class="nav-item"><a class="nav-link" href="polizas.html"><i class="nav-icon bi bi-file-medical"></i><p>Pólizas</p></a></li>
+          <li class="nav-item"><a class="nav-link" href="autorizaciones.html"><i class="nav-icon bi bi-clipboard2-check"></i><p>Autorizaciones</p></a></li>
+          <li class="nav-item"><a class="nav-link" href="facturas.html"><i class="nav-icon bi bi-receipt"></i><p>Facturas clínicas</p></a></li>
+          <li class="nav-item"><a class="nav-link" href="reclamaciones.html"><i class="nav-icon bi bi-journal-text"></i><p>Historial reclamaciones</p></a></li>
+          <li class="nav-item"><a class="nav-link active" href="reportes.html"><i class="nav-icon bi bi-bar-chart-line"></i><p>Reportes</p></a></li>
+        
+      </nav>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <div class="app-content-header">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-sm-6"><h3 class="mb-0">Reportes del sistema ARS</h3></div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-end">
+              <li class="breadcrumb-item"><a href="agente-dashboard.html">Dashboard</a></li>
+              <li class="breadcrumb-item active">Reportes</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="app-content">
+      <div class="container-fluid">
+        <div class="row g-3 mb-4">
+          <div class="col-lg-3 col-6"><div class="small-box text-bg-info"><div class="inner"><h3 id="totalAfiliados">0</h3><p>Afiliados</p></div><i class="small-box-icon bi bi-people"></i></div></div>
+          <div class="col-lg-3 col-6"><div class="small-box text-bg-success"><div class="inner"><h3 id="totalAutorizaciones">0</h3><p>Autorizaciones automáticas</p></div><i class="small-box-icon bi bi-clipboard2-check"></i></div></div>
+          <div class="col-lg-3 col-6"><div class="small-box text-bg-warning"><div class="inner"><h3 id="totalFacturas">0</h3><p>Facturas</p></div><i class="small-box-icon bi bi-receipt"></i></div></div>
+          <div class="col-lg-3 col-6"><div class="small-box text-bg-primary"><div class="inner"><h3 id="totalClinicas">0</h3><p>Clínicas</p></div><i class="small-box-icon bi bi-hospital"></i></div></div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-lg-6">
+            <div class="card card-outline card-primary h-100">
+              <div class="card-header"><h3 class="card-title">Resumen de autorizaciones automáticas</h3></div>
+              <div class="card-body">
+                <div class="d-flex justify-content-between py-2 border-bottom"><span>Pendientes</span><strong id="autPendientes">0</strong></div>
+                <div class="d-flex justify-content-between py-2 border-bottom"><span>Aprobadas</span><strong id="autAprobadas">0</strong></div>
+                <div class="d-flex justify-content-between py-2"><span>Rechazadas</span><strong id="autRechazadas">0</strong></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="card card-outline card-success h-100">
+              <div class="card-header"><h3 class="card-title">Montos de facturación</h3></div>
+              <div class="card-body">
+                <div class="d-flex justify-content-between py-2 border-bottom"><span>Total facturado</span><strong id="montoFacturado">RD$ 0.00</strong></div>
+                <div class="d-flex justify-content-between py-2 border-bottom"><span>Cubierto por ARS</span><strong id="montoSeguro">RD$ 0.00</strong></div>
+                <div class="d-flex justify-content-between py-2"><span>Cubierto por paciente</span><strong id="montoPaciente">RD$ 0.00</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mt-4">
+          <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h3 class="card-title">Historial de pago por clínica</h3>
+            <div class="toolbar-reportes">
+              <input type="text" id="buscarHistorialPago" class="form-control form-control-sm" placeholder="Buscar por clínica">
+              <select id="limiteHistorialPago" class="form-select form-select-sm">
+                <option value="5" selected>5</option>
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="30">30</option>
+              </select>
+            </div>
+          </div>
+          <div class="card-body table-responsive p-0">
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Clínica</th><th>Servicios</th><th>Facturas</th><th>Total ARS</th><th>Total paciente</th><th>Pendiente ARS</th>
+                </tr>
+              </thead>
+              <tbody id="tablaClinicasResumen">
+                <tr><td colspan="6" class="text-center py-4 text-muted">No hay datos para mostrar.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <small class="text-muted" id="infoHistorialPago">Mostrando 0-0 de 0 clínicas</small>
+            <div class="btn-group">
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="btnPrevHistorialPago">Anterior</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="btnNextHistorialPago">Siguiente</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    <div class="float-end d-none d-sm-inline">Sistema ARS Salud</div>
+    <strong>ARS Salud Demo</strong>
+  </footer>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/browser/overlayscrollbars.browser.es6.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.min.js"></script>
+<script src="../dist/js/adminlte.js"></script>
+<script src="../dist/js/auth-rol.js"></script>
+<script src="../dist/js/ars-finanzas-sync.js"></script>
+<script src="../dist/js/reportes.js"></script>
+</body>
+</html>

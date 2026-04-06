@@ -1,0 +1,16 @@
+PARCHE APLICADO
+
+Cambios incluidos:
+1. Los afiliados nuevos ahora generan IDs secuenciales tipo AFI-001, AFI-002, AFI-003.
+2. La clínica valida el seguro con el ID generado del afiliado.
+3. En Crear paciente se agregó Tipo de atención: Con seguro / Privado.
+4. Si es Con seguro, se usa el campo Código del seguro (ejemplo AFI-001).
+
+Archivos reemplazados:
+- dist/js/afiliados.js
+- dist/js/auth-rol.js
+- dist/js/crear-paciente-clinica.js
+- pages/crear-paciente-clinica.html
+
+Recomendación:
+- Si ya habías probado antes, limpia el localStorage del navegador antes de volver a probar.

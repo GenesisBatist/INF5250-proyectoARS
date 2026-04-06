@@ -1,0 +1,210 @@
+document.addEventListener('DOMContentLoaded', () => {
+  const user = ARSAuth.getCurrentUser();
+  document.getElementById('userName').textContent = user?.nombre || 'Afiliado';
+  document.querySelectorAll('[data-home-link]').forEach(a => a.href = ARSAuth.getHomeByRole(user?.rol));
+
+  const safeText = (v) => String(v ?? '').trim();
+  const normalize = (v) => safeText(v).toLowerCase();
+  const normalizeId = (v) => safeText(v).replace(/\s+/g, '').toLowerCase();
+  const normalizeCedula = (v) => safeText(v).replace(/\D/g, '');
+  const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+
+  function findAfiliadoActual() {
+    const afiliados = ARSAuth.getAfiliados?.() || [];
+    if (!afiliados.length) return null;
+
+    const byReferencia = afiliados.find(a => normalizeId(a.id) === normalizeId(user?.referenciaId));
+    if (byReferencia) return byReferencia;
+
+    const byCedulaUser = afiliados.find(a => normalizeCedula(a.cedula) === normalizeCedula(user?.cedula));
+    if (byCedulaUser) return byCedulaUser;
+
+    const byNombre = afiliados.find(a => normalize(a.nombre) === normalize(user?.nombre));
+    if (byNombre) return byNombre;
+
+    return afiliados[0] || null;
+  }
+
+  const afiliado = findAfiliadoActual();
+  const plan = afiliado ? ARSAuth.findPoliza?.(afiliado.polizaId || afiliado.planId) : null;
+  const coberturasPlan = typeof ARSAuth?.normalizePolicyCoverage === 'function' ? ARSAuth.normalizePolicyCoverage(plan) : ((plan?.coberturas || []).length ? plan.coberturas : (plan?.cobertura || []).map(servicio => ({ servicio, porcentaje: 100, tope: 0 })));
+
+  document.getElementById('afiNombre').textContent = afiliado?.nombre || '-';
+  document.getElementById('afiCedula').textContent = afiliado?.cedula || '-';
+  document.getElementById('afiPoliza').textContent = afiliado?.polizaId || '-';
+  document.getElementById('afiPlan').textContent = plan?.nombre || plan?.nombrePlan || '-';
+  document.getElementById('afiCoberturas').innerHTML = coberturasPlan.map(c => `<span class="badge text-bg-primary">${escapeHtml(c.servicio)}${c.porcentaje ? ` (${c.porcentaje}%)` : ''}</span>`).join('');
+
+  const badge = (estado) => {
+    const estadoNorm = normalize(estado);
+    const cls = estadoNorm === 'aprobada' || estadoNorm === 'comprobada'
+      ? 'approved'
+      : estadoNorm === 'rechazada'
+        ? 'rejected'
+        : 'pending';
+    return `<span class="badge-soft ${cls}">${escapeHtml(safeText(estado || 'pendiente').toUpperCase())}</span>`;
+  };
+
+  function createTableController({ tableBodyId, emptyMessage, columns, rowRenderer, data }) {
+    const tbody = document.getElementById(tableBodyId);
+    if (!tbody) return;
+
+    const table = tbody.closest('table');
+    const tableResponsive = tbody.closest('.table-responsive');
+    const cardBody = tbody.closest('.card-body');
+    if (!table || !tableResponsive || !cardBody) return;
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'd-flex flex-column gap-2 mb-3';
+    wrapper.innerHTML = `
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+        <div class="input-group input-group-sm" style="max-width: 320px;">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input type="text" class="form-control" placeholder="Buscar...">
+        </div>
+        <div class="d-flex align-items-center gap-2 ms-md-auto">
+          <label class="small text-muted mb-0">Ver</label>
+          <select class="form-select form-select-sm" style="width: 90px;">
+            <option value="5" selected>5</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="30">30</option>
+          </select>
+        </div>
+      </div>
+      <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+        <small class="text-muted js-summary"></small>
+        <nav>
+          <ul class="pagination pagination-sm mb-0 js-pagination"></ul>
+        </nav>
+      </div>
+    `;
+    cardBody.insertBefore(wrapper, tableResponsive);
+
+    const input = wrapper.querySelector('input');
+    const select = wrapper.querySelector('select');
+    const summary = wrapper.querySelector('.js-summary');
+    const pagination = wrapper.querySelector('.js-pagination');
+
+    let searchTerm = '';
+    let pageSize = 5;
+    let currentPage = 1;
+
+    function getFilteredData() {
+      const term = normalize(searchTerm);
+      if (!term) return [...data];
+      return data.filter(item => normalize(JSON.stringify(item)).includes(term));
+    }
+
+    function renderPagination(totalPages) {
+      pagination.innerHTML = '';
+      if (totalPages <= 1) return;
+
+      const addPageBtn = (label, page, disabled = false, active = false) => {
+        const li = document.createElement('li');
+        li.className = `page-item${disabled ? ' disabled' : ''}${active ? ' active' : ''}`;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'page-link';
+        btn.textContent = label;
+        btn.disabled = disabled;
+        btn.addEventListener('click', () => {
+          currentPage = page;
+          update();
+        });
+        li.appendChild(btn);
+        pagination.appendChild(li);
+      };
+
+      addPageBtn('«', Math.max(1, currentPage - 1), currentPage === 1);
+      for (let page = 1; page <= totalPages; page += 1) {
+        addPageBtn(String(page), page, false, page === currentPage);
+      }
+      addPageBtn('»', Math.min(totalPages, currentPage + 1), currentPage === totalPages);
+    }
+
+    function update() {
+      const filtered = getFilteredData();
+      const total = filtered.length;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+      const start = (currentPage - 1) * pageSize;
+      const visible = filtered.slice(start, start + pageSize);
+      const from = total ? start + 1 : 0;
+      const to = total ? start + visible.length : 0;
+
+      summary.textContent = total ? `Mostrando ${from}-${to} de ${total} registros` : 'No hay registros para mostrar';
+
+      tbody.innerHTML = visible.length
+        ? visible.map(rowRenderer).join('')
+        : `<tr><td colspan="${columns}" class="text-center text-muted py-4">${escapeHtml(emptyMessage)}</td></tr>`;
+
+      renderPagination(totalPages);
+    }
+
+    input.addEventListener('input', (e) => {
+      searchTerm = e.target.value || '';
+      currentPage = 1;
+      update();
+    });
+
+    select.addEventListener('change', (e) => {
+      pageSize = parseInt(e.target.value, 10) || 5;
+      currentPage = 1;
+      update();
+    });
+
+    update();
+  }
+
+  const afiliadoIdNorm = normalizeId(afiliado?.id);
+  const afiliadoCedulaNorm = normalizeCedula(afiliado?.cedula);
+
+  const auts = (ARSAuth.getAutorizaciones?.() || [])
+    .filter(a => normalizeId(a.afiliadoId) === afiliadoIdNorm || normalizeCedula(a.afiliadoCedula) === afiliadoCedulaNorm)
+    .sort((a, b) => new Date(b.fechaISO || b.fechaServicio || 0) - new Date(a.fechaISO || a.fechaServicio || 0));
+
+  createTableController({
+    tableBodyId: 'tablaAfiliadoAut',
+    emptyMessage: 'No hay autorizaciones para este afiliado.',
+    columns: 6,
+    data: auts,
+    rowRenderer: (a) => `
+      <tr>
+        <td>${escapeHtml(a.id)}</td>
+        <td>${escapeHtml(a.clinicaNombre || a.clinica || '-')}</td>
+        <td>${escapeHtml(a.servicio || '-')}</td>
+        <td>${escapeHtml(a.coberturaDisponible ? 'Cubierto' : 'Revisión')}</td>
+        <td>${badge(a.estado)}</td>
+        <td>${escapeHtml(a.fechaServicio || a.fechaCreacion || '-')}</td>
+      </tr>
+    `
+  });
+
+  const reclamaciones = (() => {
+    try {
+      const list = JSON.parse(localStorage.getItem('reclamaciones')) || [];
+      return Array.isArray(list) ? list : [];
+    } catch {
+      return [];
+    }
+  })()
+    .filter(r => (normalizeId(r.afiliadoId) === afiliadoIdNorm || normalizeCedula(r.cedula) === afiliadoCedulaNorm) && ['aprobada', 'comprobada'].includes(normalize(r.estado)))
+    .sort((a, b) => new Date(b.fechaISO || b.fechaRevision || b.fechaCreacion || 0) - new Date(a.fechaISO || a.fechaRevision || a.fechaCreacion || 0));
+
+  createTableController({
+    tableBodyId: 'tablaAfiliadoReclamaciones',
+    emptyMessage: 'No tienes reclamaciones aprobadas o comprobadas.',
+    columns: 5,
+    data: reclamaciones,
+    rowRenderer: (r) => `
+      <tr>
+        <td>${escapeHtml(r.id)}</td>
+        <td>${escapeHtml(r.motivo || '-')}</td>
+        <td style="max-width:320px; white-space:normal;">${escapeHtml(r.detalle || '-')}</td>
+        <td>${badge(r.estado)}</td>
+        <td>${escapeHtml(r.fechaRevision || r.fechaCreacion || '-')}</td>
+      </tr>
+    `
+  });
+});

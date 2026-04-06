@@ -1,0 +1,16 @@
+PARCHE PROCESOS CLINICOS - PAGINACION
+
+Reemplaza:
+- AdminLTE-4.0.0-rc7/pages/servicios-clinica.html
+- AdminLTE-4.0.0-rc7/dist/js/servicios-clinica.js
+
+Cambios:
+1. Últimos registros:
+   - máximo 5 por vista
+   - botones Anterior y Siguiente
+
+2. Autorizaciones automáticas generadas:
+   - máximo 10 por vista
+   - botones Anterior y Siguiente
+
+Después de reemplazar, haz Ctrl + F5.
