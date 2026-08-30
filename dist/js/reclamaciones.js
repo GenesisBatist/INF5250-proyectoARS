@@ -313,12 +313,9 @@
     render('agente', user);
   };
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const user = getCurrentUser();
-    if (!user || !['agente', 'afiliado'].includes(user.rol)) {
-      window.location.href = 'examples/seleccion-rol.html';
-      return;
-    }
+  document.addEventListener('DOMContentLoaded', async () => {
+    const user = await ARSAuth.requireRoleOrRedirect(['agente', 'afiliado']);
+    if (!user) return;
 
     setupRoleView(user.rol, user);
     controls = setupPaginationControls(() => {
@@ -327,8 +324,17 @@
     });
     handleCreate(user.rol, user);
     render(user.rol, user);
+    const refreshFromSql = () => {
+      const done = function () { render(user.rol, user); };
+      const promise = window.ARSHybridStorage?.refreshNow?.();
+      if (promise && typeof promise.finally === 'function') {
+        promise.finally(done);
+        return;
+      }
+      done();
+    };
 
-    window.addEventListener('storage', () => render(user.rol, user));
-    window.addEventListener('focus', () => render(user.rol, user));
+    window.addEventListener('ars:storage-sync', () => render(user.rol, user));
+    window.addEventListener('focus', refreshFromSql);
   });
 })();

@@ -1,9 +1,6 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const user = ARSAuth?.getCurrentUser?.();
-  if (!user || user.rol !== 'clinica') {
-    window.location.href = 'examples/seleccion-rol.html';
-    return;
-  }
+document.addEventListener('DOMContentLoaded', async () => {
+  const user = await ARSAuth.requireRoleOrRedirect('clinica');
+  if (!user) return;
 
   const q = (id) => document.getElementById(id);
   const read = (key) => { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch { return []; } };

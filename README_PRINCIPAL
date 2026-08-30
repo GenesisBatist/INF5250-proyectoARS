@@ -1,0 +1,39 @@
+# Sistema de Gestión ARS
+
+## Asignatura
+INF-5250 Ingeniería de Software II
+
+## Integrantes
+- Breilin De La Cruz
+- Bryan Batista Reynoso
+- Genesis Batista Mejia
+- Mario Alberto Cabral
+
+## Descripción del sistema
+Sistema web para la gestión de una Administradora de Riesgos de Salud (ARS). El sistema permite 
+gestionar diferentes procesos relacionados con afiliados, clínicas, agentes, pólizas, autorizaciones, 
+facturas, proveedores y reclamaciones.
+
+## Tecnologías utilizadas
+- HTML
+- CSS
+- JavaScript
+- PHP
+- MySQL
+- AdminLTE
+
+## Base de datos
+MySQL
+
+## Ejecución local
+1. Clonar el repositorio.
+2. Configurar el entorno local con XAMPP.
+3. Crear la base de datos en MySQL.
+4. Configurar las credenciales de conexión en el archivo `.env`.
+5. Colocar el proyecto en el directorio correspondiente de XAMPP.
+6. Iniciar Apache y MySQL.
+7. Abrir la aplicación desde el navegador.
+
+## MVP
+La versión inicial permite gestionar los principales módulos del sistema ARS y constituye la base 
+para el desarrollo de las siguientes etapas del proyecto.

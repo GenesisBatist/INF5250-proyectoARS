@@ -290,13 +290,10 @@
       </tr>`).join('') : '<tr><td colspan="6" class="text-center py-4 text-muted">No hay pagos aceptados todavía.</td></tr>';
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
     window.ARSFinanzasSync?.syncAll?.();
-    const user = window.ARSAuth?.getCurrentUser?.();
-    if (!user || !['agente', 'clinica'].includes(user.rol)) {
-      window.location.href = 'examples/seleccion-rol.html';
-      return;
-    }
+    const user = await window.ARSAuth.requireRoleOrRedirect(['agente', 'clinica']);
+    if (!user) return;
     initChrome(user);
     document.getElementById('btnLogout')?.addEventListener('click', (e) => { e.preventDefault(); window.ARSAuth?.logout?.(); });
 

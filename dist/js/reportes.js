@@ -6,18 +6,34 @@
   const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
   const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
 
-  function cargarHeaderUsuario() {
-    try {
-      const user = window.ARSAuth?.getCurrentUser?.();
-      if (user) {
-        setText('userName', user.nombre || user.username || 'Agente');
-        setText('userFullName', user.nombre || user.username || 'Agente ARS');
-      }
-      document.getElementById('btnLogout')?.addEventListener('click', function (e) {
-        e.preventDefault();
-        if (window.ARSAuth?.logout) window.ARSAuth.logout();
-      });
-    } catch (e) {}
+  function normalizeChrome(user) {
+    const header = document.querySelector('.app-header .container-fluid');
+    if (header) {
+      header.innerHTML = `
+        <a class="navbar-brand anchor-home brand-text-strong" href="agente-dashboard.html">Sistema ARS Salud</a>
+        <div class="ms-auto d-flex align-items-center gap-2">
+          <span class="header-pill">Rol Agente</span>
+          <span id="userName" class="fw-semibold">${escapeHtml(user?.nombre || user?.username || 'Agente ARS')}</span>
+          <button class="btn btn-outline-secondary btn-sm" id="btnLogout">Salir</button>
+        </div>`;
+    }
+
+    const sidebarMenu = document.querySelector('.sidebar-menu');
+    if (sidebarMenu) {
+      sidebarMenu.setAttribute('role', 'menu');
+      sidebarMenu.removeAttribute('data-accordion');
+    }
+
+    const brand = document.querySelector('.sidebar-brand .brand-link');
+    if (brand) {
+      brand.setAttribute('href', 'agente-dashboard.html');
+    }
+
+    const logoutBtn = document.getElementById('btnLogout');
+    logoutBtn?.addEventListener('click', function (e) {
+      e.preventDefault();
+      window.ARSAuth?.logout?.();
+    });
   }
 
   function obtenerDatos() {
@@ -115,12 +131,24 @@
     renderHistorialPago();
   }
 
-  document.addEventListener('DOMContentLoaded', function () {
-    cargarHeaderUsuario();
+  function refreshFromSql() {
+    const done = function () { refresh(); };
+    const promise = window.ARSHybridStorage?.refreshNow?.();
+    if (promise && typeof promise.finally === 'function') {
+      promise.finally(done);
+      return;
+    }
+    done();
+  }
+
+  document.addEventListener('DOMContentLoaded', async function () {
+    const user = await window.ARSAuth.requireRoleOrRedirect('agente');
+    if (!user) return;
+    normalizeChrome(user);
     bindHistorialPago();
-    refresh();
-    window.addEventListener('focus', refresh);
-    window.addEventListener('storage', refresh);
+    refreshFromSql();
+    window.addEventListener('focus', refreshFromSql);
+    window.addEventListener('ars:storage-sync', refresh);
   });
 
   window.cargarReportes = refresh;

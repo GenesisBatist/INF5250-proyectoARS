@@ -111,7 +111,7 @@
   function logAction(accion, detalle) {
     const auditoria = read(STORAGE_KEYS.auditoria, []);
     const current = getCurrentUser();
-    auditoria.unshift({ fecha: today(), accion, usuario: current ? current.nombre : 'Sistema', detalle: detalle || '' });
+    auditoria.unshift({ id: uid('AUD'), fecha: today(), accion, usuario: current ? current.nombre : 'Sistema', detalle: detalle || '' });
     write(STORAGE_KEYS.auditoria, auditoria);
   }
 
@@ -177,8 +177,79 @@
     return getAfiliados().find(a => normalizeCedula(a.cedula) === limpia) || null;
   }
 
-  function getCurrentUser() { return read(STORAGE_KEYS.currentUser, null); }
-  function setCurrentUser(user) { write(STORAGE_KEYS.currentUser, user); }
+  function getCurrentUser() {
+    return read(STORAGE_KEYS.currentUser, null);
+  }
+  function setCurrentUser(user) {
+    write(STORAGE_KEYS.currentUser, user);
+    try { localStorage.setItem('usuario', String(user?.username || '')); } catch {}
+    try { localStorage.setItem('nombre', String(user?.nombre || user?.username || '')); } catch {}
+  }
+
+  function hasRequiredRole(user, rol) {
+    if (!user) return false;
+    if (Array.isArray(rol)) return rol.includes(user.rol);
+    return user.rol === rol;
+  }
+
+  function waitForCurrentUser(options) {
+    const settings = options || {};
+    const waitMs = Number(settings.waitMs ?? 1200);
+    const intervalMs = Number(settings.intervalMs ?? 80);
+    const immediateUser = getCurrentUser();
+    if (immediateUser || waitMs <= 0) return Promise.resolve(immediateUser);
+
+    return new Promise(function (resolve) {
+      let finished = false;
+      let intervalId = null;
+      let timeoutId = null;
+
+      function cleanup() {
+        if (intervalId) clearInterval(intervalId);
+        if (timeoutId) clearTimeout(timeoutId);
+        window.removeEventListener('storage', checkNow);
+        window.removeEventListener('focus', checkNow);
+        window.removeEventListener('ars:storage-sync', checkNow);
+      }
+
+      function finish(user) {
+        if (finished) return;
+        finished = true;
+        cleanup();
+        resolve(user || null);
+      }
+
+      function checkNow() {
+        const user = getCurrentUser();
+        if (user) finish(user);
+      }
+
+      intervalId = setInterval(checkNow, intervalMs);
+      timeoutId = setTimeout(function () {
+        finish(getCurrentUser());
+      }, waitMs);
+
+      checkNow();
+    });
+  }
+
+  async function requireRoleOrRedirect(rol, options) {
+    const settings = options || {};
+    const redirectTo = settings.redirectTo || 'examples/seleccion-rol.html';
+    const user = await waitForCurrentUser(settings);
+
+    if (hasRequiredRole(user, rol)) {
+      return user;
+    }
+
+    if (user) {
+      window.location.href = getHomeByRole(user.rol);
+      return null;
+    }
+
+    window.location.href = redirectTo;
+    return null;
+  }
 
   function loginAgente(username, password) {
     const user = getUsers().find(u => u.rol === 'agente' && u.username === username && u.password === password && u.activo);
@@ -233,15 +304,15 @@
   function logout() {
     const current = getCurrentUser();
     if (current) logAction('Cierre de sesión', `Salida de ${current.username}`);
-    localStorage.removeItem(STORAGE_KEYS.currentUser);
+    try { localStorage.removeItem(STORAGE_KEYS.currentUser); } catch {}
+    try { localStorage.removeItem('usuario'); } catch {}
+    try { localStorage.removeItem('nombre'); } catch {}
     window.location.href = 'examples/seleccion-rol.html';
   }
 
   function requireRole(rol) {
     const u = getCurrentUser();
-    if (!u) return false;
-    if (Array.isArray(rol)) return rol.includes(u.rol);
-    return u.rol === rol;
+    return hasRequiredRole(u, rol);
   }
 
 
@@ -595,6 +666,8 @@
     getCoverageOptionsByPlan,
     getCurrentUser,
     requireRole,
+    requireRoleOrRedirect,
+    waitForCurrentUser,
     loginAgente,
     loginAfiliado,
     loginClinica,

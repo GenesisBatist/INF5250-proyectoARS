@@ -6,9 +6,32 @@
   const escapeHtml = (v) => String(v ?? '').replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
   const formatDate = (v) => !v ? '-' : (isNaN(new Date(v).getTime()) ? String(v) : new Date(v).toLocaleString('es-DO'));
 
+  function normalizeChrome(user) {
+    const header = document.querySelector('.app-header .container-fluid');
+    if (header) {
+      header.innerHTML = `
+        <a class="navbar-brand anchor-home brand-text-strong" href="clinica-dashboard.html">Sistema ARS Salud</a>
+        <div class="ms-auto d-flex align-items-center gap-2">
+          <span class="header-pill">Rol Cl&iacute;nica</span>
+          <span id="userName" class="fw-semibold">${escapeHtml(user?.nombre || user?.username || 'Cl&iacute;nica / Hospital')}</span>
+          <button class="btn btn-outline-secondary btn-sm" id="btnLogout">Salir</button>
+        </div>`;
+    }
+
+    const sidebarMenu = document.querySelector('.sidebar-menu');
+    if (sidebarMenu) {
+      sidebarMenu.setAttribute('role', 'menu');
+      sidebarMenu.removeAttribute('data-accordion');
+    }
+
+    const brand = document.querySelector('.sidebar-brand .brand-link');
+    if (brand) {
+      brand.setAttribute('href', 'clinica-dashboard.html');
+    }
+  }
+
   function renderHeader(user) {
     document.getElementById('userName').textContent = user.nombre || user.username || 'Clínica';
-    document.getElementById('userFullName').textContent = user.nombre || user.username || 'Clínica / Hospital';
   }
 
   function renderTable(rows, key, tbodyId, infoId, prevId, nextId, rowRenderer, emptyHtml) {
@@ -71,15 +94,32 @@
     );
   }
 
-  document.addEventListener('DOMContentLoaded', function () {
-    const user = window.ARSAuth?.getCurrentUser?.();
-    if (!user || user.rol !== 'clinica') { window.location.href = 'examples/seleccion-rol.html'; return; }
+  document.addEventListener('DOMContentLoaded', async function () {
+    const user = await window.ARSAuth.requireRoleOrRedirect('clinica');
+    if (!user) return;
+    normalizeChrome(user);
     renderHeader(user);
     window.ARSFinanzasSync?.syncAll?.();
     const snapshot = window.ARSFinanzasSync?.buildReportForClinic?.(user.referenciaId) || {};
     const historyRows = (window.ARSFinanzasSync?.getReportes?.() || []).filter(r => String(r.clinicaId) === String(user.referenciaId)).sort((a,b) => new Date(b.fechaActualizacion || 0) - new Date(a.fechaActualizacion || 0));
-    const renderAll = () => renderSnapshot(snapshot, historyRows);
-    renderAll();
+    const renderAll = () => {
+      const nextSnapshot = window.ARSFinanzasSync?.buildReportForClinic?.(user.referenciaId) || {};
+      const nextHistoryRows = (window.ARSFinanzasSync?.getReportes?.() || []).filter(r => String(r.clinicaId) === String(user.referenciaId)).sort((a,b) => new Date(b.fechaActualizacion || 0) - new Date(a.fechaActualizacion || 0));
+      renderSnapshot(nextSnapshot, nextHistoryRows);
+    };
+    const refreshFromSql = () => {
+      const done = function () {
+        window.ARSFinanzasSync?.syncAll?.();
+        renderAll();
+      };
+      const promise = window.ARSHybridStorage?.refreshNow?.();
+      if (promise && typeof promise.finally === 'function') {
+        promise.finally(done);
+        return;
+      }
+      done();
+    };
+    refreshFromSql();
 
     bindPager('btnPrevReporteClinica', 'btnNextReporteClinica', 'historial', renderAll);
     bindPager('btnPrevPacientesClinica', 'btnNextPacientesClinica', 'pacientes', renderAll);
@@ -88,6 +128,7 @@
     bindPager('btnPrevActividadClinica', 'btnNextActividadClinica', 'actividad', renderAll);
 
     document.getElementById('btnLogout')?.addEventListener('click', function(e){ e.preventDefault(); window.ARSAuth?.logout?.(); });
-    window.addEventListener('focus', () => { window.ARSFinanzasSync?.syncAll?.(); location.reload(); });
+    window.addEventListener('focus', refreshFromSql);
+    window.addEventListener('ars:storage-sync', renderAll);
   });
 })();

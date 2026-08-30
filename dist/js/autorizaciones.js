@@ -361,12 +361,9 @@ function initAfiliadoVista() {
   document.getElementById('rolMessage')?.classList.replace('alert-info', 'alert-primary');
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  const user = ARSAuth.getCurrentUser();
-  if (!user) {
-    window.location.href = 'examples/seleccion-rol.html';
-    return;
-  }
+document.addEventListener('DOMContentLoaded', async () => {
+  const user = await ARSAuth.requireRoleOrRedirect(['agente', 'clinica', 'afiliado']);
+  if (!user) return;
 
   applyRoleLayout();
 

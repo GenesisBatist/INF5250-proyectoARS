@@ -18,6 +18,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function logout() {
-    localStorage.clear();
+    try { localStorage.removeItem('ars_current_user'); } catch {}
+    try { localStorage.removeItem('token'); } catch {}
+    try { localStorage.removeItem('usuario'); } catch {}
+    try { localStorage.removeItem('nombre'); } catch {}
     window.location.href = 'examples/seleccion-rol.html';
 }

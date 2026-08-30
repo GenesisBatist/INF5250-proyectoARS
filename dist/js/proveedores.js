@@ -1,9 +1,6 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const user = ARSAuth.getCurrentUser?.();
-  if (!user || user.rol !== 'agente') {
-    window.location.href = 'examples/seleccion-rol.html';
-    return;
-  }
+document.addEventListener("DOMContentLoaded", async () => {
+  const user = await ARSAuth.requireRoleOrRedirect('agente');
+  if (!user) return;
 
   const $ = (id) => document.getElementById(id);
   const form = $("formClinica");

@@ -1,9 +1,6 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const user = ARSAuth?.getCurrentUser?.();
-  if (!user) {
-    window.location.href = 'examples/seleccion-rol.html';
-    return;
-  }
+document.addEventListener('DOMContentLoaded', async () => {
+  const user = await ARSAuth.requireRoleOrRedirect('agente');
+  if (!user) return;
   const userName = document.getElementById('userName');
   if (userName) userName.textContent = user.nombre || 'Agente ARS';
 

@@ -1,14 +1,11 @@
-document.addEventListener('DOMContentLoaded', () => {
-  if (!ARSAuth.requireRole('agente')) {
-    window.location.href = 'examples/seleccion-rol.html';
-    return;
-  }
+document.addEventListener('DOMContentLoaded', async () => {
+  const user = await ARSAuth.requireRoleOrRedirect('agente');
+  if (!user) return;
 
   const PAGE_DEFAULT = 5;
   let paginaPagoClinicas = 1;
   let paginaFactAgente = 1;
 
-  const user = ARSAuth.getCurrentUser();
   const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
   setText('userName', user?.nombre || 'Agente ARS');
 
@@ -135,6 +132,16 @@ document.addEventListener('DOMContentLoaded', () => {
     renderFacturasAgente();
   }
 
+  function refreshFromSql() {
+    const done = function () { renderDashboard(); };
+    const promise = window.ARSHybridStorage?.refreshNow?.();
+    if (promise && typeof promise.finally === 'function') {
+      promise.finally(done);
+      return;
+    }
+    done();
+  }
+
   document.getElementById('buscarPagoClinicas')?.addEventListener('input', () => { paginaPagoClinicas = 1; renderPagoClinicas(); });
   document.getElementById('limitePagoClinicas')?.addEventListener('change', () => { paginaPagoClinicas = 1; renderPagoClinicas(); });
   document.getElementById('btnPrevPagoClinicas')?.addEventListener('click', () => { if (paginaPagoClinicas > 1) { paginaPagoClinicas--; renderPagoClinicas(); } });
@@ -144,9 +151,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnPrevFactAgente')?.addEventListener('click', () => { if (paginaFactAgente > 1) { paginaFactAgente--; renderFacturasAgente(); } });
   document.getElementById('btnNextFactAgente')?.addEventListener('click', () => { const totalPaginas = Math.max(1, Math.ceil(getFacturasFiltradas().length / pageSizeFactAgente())); if (paginaFactAgente < totalPaginas) { paginaFactAgente++; renderFacturasAgente(); } });
 
-  renderDashboard();
-  window.addEventListener('focus', renderDashboard);
-  window.addEventListener('storage', renderDashboard);
+  refreshFromSql();
+  window.addEventListener('focus', refreshFromSql);
+  window.addEventListener('ars:storage-sync', renderDashboard);
 });
 
 function irModulo(tipo) {

@@ -1,0 +1,4 @@
+api/.env
+api/debug-db.php
+node_modules/
+.codex/
