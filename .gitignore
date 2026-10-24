@@ -2,3 +2,8 @@ api/.env
 api/debug-db.php
 node_modules/
 .codex/
+php-8.5.10-nts-Win32-vs17-x64/
+phpmetrics*.exe
+phpmetrics.phar
+phpmetrics-report/
+phpstan.phar

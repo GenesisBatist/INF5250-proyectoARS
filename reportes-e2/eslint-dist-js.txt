@@ -1,0 +1,82 @@
+
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\dist\js\afiliado-panel.js
+  19:14  error  '_' is defined but never used  no-unused-vars
+  19:17  error  Empty block statement          no-empty
+  39:16  error  '_' is defined but never used  no-unused-vars
+  39:19  error  Empty block statement          no-empty
+  48:14  error  '_' is defined but never used  no-unused-vars
+  48:17  error  Empty block statement          no-empty
+
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\dist\js\afiliados.js
+  165:42  error  'idEdit' is assigned a value but never used  no-unused-vars
+
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\dist\js\agente-panel.js
+  159:10  error  'irModulo' is defined but never used  no-unused-vars
+
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\dist\js\auth-rol.js
+  185:82  error  Empty block statement  no-empty
+  186:97  error  Empty block statement  no-empty
+  307:70  error  Empty block statement  no-empty
+  308:55  error  Empty block statement  no-empty
+  309:54  error  Empty block statement  no-empty
+  646:98  error  Empty block statement  no-empty
+  649:88  error  Empty block statement  no-empty
+
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\dist\js\auth.js
+  16:22  error    'API_URL' is not defined      no-undef
+  38:17  warning  Unexpected console statement  no-console
+
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\dist\js\autorizaciones.js
+   48:10  error  'formatMoney' is defined but never used      no-unused-vars
+  227:9   error  'poliza' is assigned a value but never used  no-unused-vars
+
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\dist\js\config.js
+  17:10  error    'getAuthHeaders' is defined but never used   no-unused-vars
+  26:10  error    'handleAuthError' is defined but never used  no-unused-vars
+  28:9   warning  Unexpected console statement                 no-console
+
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\dist\js\guard-agente.js
+   4:44  error  'esAgente' is not defined           no-undef
+  20:10  error  'logout' is defined but never used  no-unused-vars
+  21:64  error  Empty block statement               no-empty
+  22:53  error  Empty block statement               no-empty
+  23:55  error  Empty block statement               no-empty
+  24:54  error  Empty block statement               no-empty
+
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\dist\js\hybrid-storage.js
+   73:9   warning  Unexpected console statement  no-console
+  131:7   warning  Unexpected console statement  no-console
+  159:7   warning  Unexpected console statement  no-console
+  174:13  warning  Unexpected console statement  no-console
+  251:11  warning  Unexpected console statement  no-console
+  271:11  warning  Unexpected console statement  no-console
+  293:9   warning  Unexpected console statement  no-console
+
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\dist\js\patch-paginacion.js
+   3:10  error  'renderPaginacionPago' is defined but never used      no-unused-vars
+   9:42  error  'paginaPagoClinicas' is not defined                   no-undef
+  13:7   error  'paginaPagoClinicas' is not defined                   no-undef
+  14:7   error  'renderPagoClinicas' is not defined                   no-undef
+  20:10  error  'renderPaginacionFacturas' is defined but never used  no-unused-vars
+  26:42  error  'paginaFactAgente' is not defined                     no-undef
+  30:7   error  'paginaFactAgente' is not defined                     no-undef
+  31:7   error  'renderFacturasAgente' is not defined                 no-undef
+
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\dist\js\patch-reportes.js
+   3:10  error  'renderPaginacionHistorial' is defined but never used  no-unused-vars
+  10:42  error  'paginaHistorialPago' is not defined                   no-undef
+  14:7   error  'paginaHistorialPago' is not defined                   no-undef
+  15:7   error  'renderHistorialPago' is not defined                   no-undef
+
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\dist\js\reportes-clinica.js
+    4:9   error  'getLs' is assigned a value but never used        no-unused-vars
+   40:11  error  'page' is assigned a value but never used         no-unused-vars
+  103:11  error  'snapshot' is assigned a value but never used     no-unused-vars
+  104:11  error  'historyRows' is assigned a value but never used  no-unused-vars
+
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\dist\js\servicios-clinica.js
+  59:12  error  'e' is defined but never used  no-unused-vars
+  59:15  error  Empty block statement          no-empty
+
+✖ 53 problems (44 errors, 9 warnings)
+

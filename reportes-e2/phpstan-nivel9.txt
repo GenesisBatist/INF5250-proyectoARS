@@ -1,0 +1,42 @@
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\StorageClasses.php:60:Parameter #1 $host of class Database constructor expects string, string|null given.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\StorageClasses.php:61:Parameter #2 $port of class Database constructor expects string, string|null given.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\StorageClasses.php:62:Parameter #3 $name of class Database constructor expects string, string|null given.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\StorageClasses.php:63:Parameter #4 $user of class Database constructor expects string, string|null given.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\StorageClasses.php:64:Parameter #5 $password of class Database constructor expects string, string|null given.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\StorageClasses.php:106:Method StorageRepository::read() return type has no value type specified in iterable type array.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\StorageClasses.php:124:Method StorageRepository::snapshot() has parameter $keys with no value type specified in iterable type array.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\StorageClasses.php:124:Method StorageRepository::snapshot() return type has no value type specified in iterable type array.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\StorageClasses.php:149:Method StorageController::handlePost() has parameter $body with no value type specified in iterable type array.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\StorageClasses.php:149:Method StorageController::handlePost() return type has no value type specified in iterable type array.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\StorageClasses.php:163:Method StorageController::handleDelete() return type has no value type specified in iterable type array.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\StorageClasses.php:176:Method StorageController::handleSnapshot() has parameter $keys with no value type specified in iterable type array.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\StorageClasses.php:176:Method StorageController::handleSnapshot() return type has no value type specified in iterable type array.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\bootstrap.php:5:Function ars_load_env_files() has parameter $paths with no value type specified in iterable type array.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\bootstrap.php:46:Strict comparison using === between string and null will always evaluate to false.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\bootstrap.php:53:Function ars_send_json() has parameter $payload with no value type specified in iterable type array.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\bootstrap.php:61:Function ars_read_json_body() return type has no value type specified in iterable type array.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\bootstrap.php:113:Function ars_parse_json() has no return type specified.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\bootstrap.php:113:Function ars_parse_json() has parameter $fallback with no type specified.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\bootstrap.php:119:Function ars_stringify_json() has parameter $value with no type specified.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\bootstrap.php:125:Function ars_normalize_bool() has parameter $value with no type specified.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\bootstrap.php:130:Function ars_denormalize_bool() has parameter $value with no type specified.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\bootstrap.php:135:Function ars_build_insert_sql() has parameter $columns with no value type specified in iterable type array.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\bootstrap.php:151:Function ars_array_defs() return type has no value type specified in iterable type array.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\bootstrap.php:712:Function ars_singleton_defs() return type has no value type specified in iterable type array.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\bootstrap.php:825:Function ars_read_array_key() return type has no value type specified in iterable type array.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\bootstrap.php:838:Cannot call method fetchAll() on PDOStatement|false.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\bootstrap.php:903:Function ars_read_singleton_key() return type has no value type specified in iterable type array.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\bootstrap.php:916:Cannot call method fetch() on PDOStatement|false.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\bootstrap.php:922:Cannot access offset mixed on mixed.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\bootstrap.php:922:Cannot cast mixed to string.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\bootstrap.php:923:Cannot access offset 'updated_at' on mixed.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\bootstrap.php:966:Function ars_read_key() return type has no value type specified in iterable type array.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\bootstrap.php:999:Function ars_storage_snapshot() has parameter $keys with no value type specified in iterable type array.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\bootstrap.php:999:Function ars_storage_snapshot() return type has no value type specified in iterable type array.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\migrate-app-storage.php:9:Function ars_is_effectively_empty() has parameter $payload with no value type specified in iterable type array.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\migrate-app-storage.php:34:Cannot call method fetchAll() on PDOStatement|false.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\storage\clear.php:9:Parameter #1 $string of function strtoupper expects string, mixed given.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\storage\clear.php:21:Cannot cast mixed to string.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\storage\item.php:9:Parameter #1 $string of function strtoupper expects string, mixed given.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\storage\item.php:43:Cannot cast mixed to string.
+C:\Users\genes\OneDrive\Escritorio\2026\INGENIERIA SOFT 2\proyecto_ARS_2026\proyectoS\api\storage\snapshot.php:11:Cannot cast mixed to string.
