@@ -125,13 +125,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     setText('agKpiMonto', money(monto));
   }
 
+  let isRendering = false;
   function renderDashboard() {
-    window.ARSFinanzasSync?.syncAll?.();
+    if (isRendering) return;
+    isRendering = true;
+    try {
+      window.ARSFinanzasSync?.syncAll?.();
+      renderKpis();
+      renderPagoClinicas();
+      renderFacturasAgente();
+    } finally {
+      isRendering = false;
+    }
+  }
+
+  function renderUIOnly() {
     renderKpis();
     renderPagoClinicas();
     renderFacturasAgente();
   }
-
   function refreshFromSql() {
     const done = function () { renderDashboard(); };
     const promise = window.ARSHybridStorage?.refreshNow?.();
@@ -153,7 +165,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   refreshFromSql();
   window.addEventListener('focus', refreshFromSql);
-  window.addEventListener('ars:storage-sync', renderDashboard);
+  window.addEventListener('ars:storage-sync', renderUIOnly);
 });
 
 function irModulo(tipo) {
