@@ -1,0 +1,88 @@
+<?php
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/bootstrap.php';
+
+ars_handle_cors();
+
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+    ars_send_json(['success' => false, 'message' => 'Método no permitido'], 405);
+}
+
+$body = ars_read_json_body();
+$rol = (string) ($body['rol'] ?? '');
+$usuario = trim((string) ($body['username'] ?? ''));
+$password = (string) ($body['password'] ?? '');
+
+// Mensaje general: nunca revela si falló el usuario, la contraseña o el rol.
+function ars_login_fail(): never
+{
+    usleep(300000); // pequeña espera para frenar intentos repetidos
+    ars_send_json(['success' => false, 'message' => 'Credenciales inválidas'], 401);
+}
+
+if (!in_array($rol, ['agente', 'afiliado', 'clinica'], true) || $usuario === '' || $password === '') {
+    ars_login_fail();
+}
+
+try {
+    $pdo = ars_pdo();
+    $defs = ars_array_defs();
+
+    if ($rol === 'agente') {
+        $stmt = $pdo->prepare("SELECT * FROM ars_users WHERE rol = 'agente' AND username = ? AND activo = 1 LIMIT 1");
+        $stmt->execute([$usuario]);
+        $tabla = 'ars_users';
+    } elseif ($rol === 'clinica') {
+        $stmt = $pdo->prepare("SELECT * FROM ars_clinicas WHERE LOWER(usuario) = LOWER(?) AND LOWER(estado) IN ('activa', 'activo') LIMIT 1");
+        $stmt->execute([$usuario]);
+        $tabla = 'ars_clinicas';
+    } else {
+        $digitos = preg_replace('/\D/', '', $usuario) ?? '';
+        $stmt = $pdo->prepare("SELECT * FROM ars_afiliados WHERE (UPPER(id) = UPPER(?) OR (? <> '' AND REPLACE(cedula, '-', '') = ?)) AND LOWER(estado) = 'activo' LIMIT 1");
+        $stmt->execute([$usuario, $digitos, $digitos]);
+        $tabla = 'ars_afiliados';
+    }
+
+    $row = $stmt->fetch();
+    if (!$row) {
+        ars_login_fail();
+    }
+
+    $guardada = (string) ($row['password'] ?? '');
+    $esHash = $guardada !== '' && password_get_info($guardada)['algo'] !== null;
+
+    if ($esHash) {
+        $ok = password_verify($password, $guardada);
+        $rehacer = $ok && password_needs_rehash($guardada, PASSWORD_DEFAULT);
+    } else {
+        // Contraseña antigua en texto plano: se acepta una sola vez y se convierte en hash.
+        $ok = $guardada !== '' && hash_equals($guardada, $password);
+        $rehacer = $ok;
+    }
+
+    if (!$ok) {
+        ars_login_fail();
+    }
+
+    if ($rehacer) {
+        $upd = $pdo->prepare("UPDATE {$tabla} SET password = ? WHERE id = ?");
+        $upd->execute([password_hash($password, PASSWORD_DEFAULT), $row['id']]);
+    }
+
+    $registro = $defs[$tabla]['fromRow']($row);
+    unset($registro['password']);
+
+    session_set_cookie_params(['httponly' => true, 'samesite' => 'Lax']);
+    session_start();
+    session_regenerate_id(true);
+    $_SESSION['usuario_id'] = $registro['id'];
+    $_SESSION['rol'] = $rol;
+    $_SESSION['inicio'] = time();
+
+    ars_send_json(['success' => true, 'rol' => $rol, 'registro' => $registro]);
+} catch (Throwable $e) {
+    error_log('login.php: ' . $e->getMessage()); // el detalle queda en el log, no en la respuesta
+    ars_send_json(['success' => false, 'message' => 'No se pudo iniciar sesión. Intente de nuevo.'], 500);
+}
