@@ -140,9 +140,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function renderUIOnly() {
-    renderKpis();
-    renderPagoClinicas();
-    renderFacturasAgente();
+    // Evita el bucle: dibujar los indicadores puede volver a guardar los reportes y avisar de un cambio.
+    if (isRendering) return;
+    isRendering = true;
+    try {
+      renderKpis();
+      renderPagoClinicas();
+      renderFacturasAgente();
+    } finally {
+      isRendering = false;
+    }
   }
   function refreshFromSql() {
     const done = function () { renderDashboard(); };
