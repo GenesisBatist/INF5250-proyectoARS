@@ -822,6 +822,40 @@ function ars_table_exists(PDO $pdo, string $tableName): bool
     return $cache[$tableName];
 }
 
+function ars_read_fallback_key(PDO $pdo, string $key): ?array
+{
+    ars_ensure_schema($pdo);
+    $stmt = $pdo->prepare('SELECT storage_value, updated_at FROM app_storage WHERE storage_key = ? LIMIT 1');
+    $stmt->execute([$key]);
+    $row = $stmt->fetch();
+    if (!$row) {
+        return null;
+    }
+
+    return [
+        'value' => $row['storage_value'],
+        'updatedAt' => $row['updated_at'],
+    ];
+}
+
+function ars_write_fallback_key(PDO $pdo, string $key, string $value): void
+{
+    ars_ensure_schema($pdo);
+    $stmt = $pdo->prepare(
+        'INSERT INTO app_storage (storage_key, storage_value)
+         VALUES (?, ?)
+         ON DUPLICATE KEY UPDATE storage_value = VALUES(storage_value)'
+    );
+    $stmt->execute([$key, $value]);
+}
+
+function ars_clear_fallback_key(PDO $pdo, string $key): void
+{
+    ars_ensure_schema($pdo);
+    $stmt = $pdo->prepare('DELETE FROM app_storage WHERE storage_key = ?');
+    $stmt->execute([$key]);
+}
+
 function ars_read_array_key(PDO $pdo, string $key): ?array
 {
     $defs = ars_array_defs();
@@ -838,7 +872,11 @@ function ars_read_array_key(PDO $pdo, string $key): ?array
     $rows = $stmt->fetchAll();
     $items = [];
     foreach ($rows as $row) {
-        $items[] = $def['fromRow']($row);
+        $item = $def['fromRow']($row);
+        if (in_array($key, ['ars_users', 'ars_afiliados', 'ars_clinicas'], true)) {
+            $item['password'] = ''; // el hash nunca viaja al navegador
+        }
+        $items[] = $item;
     }
 
     return [
@@ -851,17 +889,23 @@ function ars_write_array_key(PDO $pdo, string $key, string $rawValue): void
 {
     $defs = ars_array_defs();
     if (!isset($defs[$key])) {
-        throw new RuntimeException(sprintf('La clave %s no tiene tabla SQL asignada', $key));
+        ars_write_fallback_key($pdo, $key, $rawValue);
+        return;
     }
 
     $def = $defs[$key];
     if (!ars_table_exists($pdo, $def['tableName'])) {
-        throw new RuntimeException(sprintf('La tabla %s no existe para la clave %s', $def['tableName'], $key));
+        ars_write_fallback_key($pdo, $key, $rawValue);
+        return;
     }
 
     $items = ars_parse_json($rawValue, []);
     if (!is_array($items)) {
         throw new RuntimeException(sprintf('La clave %s debe contener un arreglo JSON', $key));
+    }
+
+    if (in_array($key, ['ars_users', 'ars_afiliados', 'ars_clinicas'], true)) {
+        $items = ars_proteger_passwords($pdo, $def['tableName'], $items);
     }
 
     $pdo->beginTransaction();
@@ -928,12 +972,14 @@ function ars_write_singleton_key(PDO $pdo, string $key, string $value): void
 {
     $defs = ars_singleton_defs();
     if (!isset($defs[$key])) {
-        throw new RuntimeException(sprintf('La clave %s no tiene tabla SQL asignada', $key));
+        ars_write_fallback_key($pdo, $key, $value);
+        return;
     }
 
     $def = $defs[$key];
     if (!ars_table_exists($pdo, $def['tableName'])) {
-        throw new RuntimeException(sprintf('La tabla %s no existe para la clave %s', $def['tableName'], $key));
+        ars_write_fallback_key($pdo, $key, $value);
+        return;
     }
 
     $stmt = $pdo->prepare(sprintf(
@@ -1013,4 +1059,39 @@ function ars_storage_snapshot(PDO $pdo, array $keys = []): array
     }
 
     return $data;
+}
+
+function ars_proteger_passwords(PDO $pdo, string $tabla, array $items): array
+{
+    // Las tablas son fijas (vienen de ars_array_defs), no de la entrada del usuario.
+    $existentes = [];
+    $filas = $pdo->query("SELECT * FROM {$tabla}")->fetchAll();
+    foreach ($filas as $r) {
+        $existentes[(string) $r['id']] = (string) ($r['password'] ?? '');
+    }
+
+    // Los agentes guardados en MySQL no se pueden borrar desde el navegador.
+    if ($tabla === 'ars_users') {
+        $ids = [];
+        foreach ($items as $it) {
+            if (is_array($it)) { $ids[(string) ($it['id'] ?? '')] = true; }
+        }
+        $fromRow = ars_array_defs()['ars_users']['fromRow'];
+        foreach ($filas as $r) {
+            if (($r['rol'] ?? '') === 'agente' && !isset($ids[(string) $r['id']])) {
+                $items[] = $fromRow($r);
+            }
+        }
+    }
+
+    foreach ($items as $i => $item) {
+        if (!is_array($item)) { continue; }
+        $p = trim((string) ($item['password'] ?? ''));
+        if ($p === '') {
+            $items[$i]['password'] = $existentes[(string) ($item['id'] ?? '')] ?? null; // conserva el hash actual
+        } elseif (password_get_info($p)['algo'] === null) {
+            $items[$i]['password'] = password_hash($p, PASSWORD_DEFAULT);               // texto plano -> hash
+        }
+    }
+    return $items;
 }
