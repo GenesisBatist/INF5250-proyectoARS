@@ -67,10 +67,7 @@
         }
       ];
 
-      const users = [
-        { id: uid('USR'), username: 'admin', password: 'admin123', rol: 'agente', nombre: 'Administrador ARS', referenciaId: null, activo: true },
-        { id: uid('USR'), username: 'agente1', password: '1234', rol: 'agente', nombre: 'Ana Rodríguez', referenciaId: null, activo: true }
-      ];
+      const users = []; // los agentes se crean en el servidor con api/seed-agente.php
 
       write(STORAGE_KEYS.users, users);
       write(STORAGE_KEYS.afiliados, []);
@@ -251,51 +248,46 @@
     return null;
   }
 
-  function loginAgente(username, password) {
-    const user = getUsers().find(u => u.rol === 'agente' && u.username === username && u.password === password && u.activo);
-    if (!user) return { success: false, message: 'Credenciales inválidas para Agente ARS' };
+  async function loginServidor(rol, username, password) {
+    try {
+      const res = await fetch('../../api/login.php', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rol, username, password })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) return { success: false, message: data.message || 'Credenciales inválidas' };
+      return data;
+    } catch {
+      return { success: false, message: 'No se pudo conectar con el servidor' };
+    }
+  }
+
+  async function loginAgente(username, password) {
+    const r = await loginServidor('agente', String(username || '').trim(), password);
+    if (!r.success) return { success: false, message: r.message };
+    const user = { id: r.registro.id, username: r.registro.username, rol: 'agente', nombre: r.registro.nombre, referenciaId: r.registro.referenciaId || null, activo: true };
     setCurrentUser(user);
     logAction('Inicio de sesión', `Ingreso como agente: ${user.username}`);
     return { success: true, rol: 'agente', user };
   }
 
-  function loginAfiliado(cedula, password) {
-    const entrada = String(cedula || '').trim().toUpperCase();
-    const limpia = normalizeCedula(cedula);
-    const afiliado = getAfiliados().find(a =>
-      ((normalizeCedula(a.cedula) === limpia && limpia.length === 11) || String(a.id || '').toUpperCase() === entrada) &&
-      String(a.password || '') === String(password || '') &&
-      String(a.estado || '').toLowerCase() === 'activo'
-    );
-    if (!afiliado) return { success: false, message: 'Código del seguro o contraseña incorrecta' };
-    let user = getUsers().find(u => u.referenciaId === afiliado.id && u.rol === 'afiliado');
-    if (!user) {
-      user = { id: uid('USR'), username: afiliado.id, password: afiliado.password, rol: 'afiliado', nombre: afiliado.nombre, referenciaId: afiliado.id, activo: true, codigoSeguro: afiliado.id, cedula: afiliado.cedula };
-      const users = getUsers();
-      users.push(user);
-      setUsers(users);
-    }
+  async function loginAfiliado(cedula, password) {
+    const r = await loginServidor('afiliado', String(cedula || '').trim(), password);
+    if (!r.success) return { success: false, message: r.message };
+    const afiliado = r.registro;
+    const user = { id: 'USR-' + afiliado.id, username: afiliado.id, rol: 'afiliado', nombre: afiliado.nombre, referenciaId: afiliado.id, activo: true, codigoSeguro: afiliado.id, cedula: afiliado.cedula };
     setCurrentUser(user);
     logAction('Inicio de sesión', `Ingreso afiliado ${afiliado.cedula}`);
     return { success: true, rol: 'afiliado', user, afiliado };
   }
 
-  function loginClinica(username, password) {
-    const userInput = String(username || '').trim();
-    const passInput = String(password || '');
-    const clinica = getClinicas().find(c =>
-      String(c.usuario || '').trim().toLowerCase() === userInput.toLowerCase() &&
-      String(c.password || '') === passInput &&
-      ['activa', 'activo'].includes(String(c.estado || '').trim().toLowerCase())
-    );
-    if (!clinica) return { success: false, message: 'Usuario o contraseña incorrectos para clínica' };
-    let user = getUsers().find(u => u.referenciaId === clinica.id && u.rol === 'clinica');
-    if (!user) {
-      user = { id: uid('USR'), username: clinica.usuario, password: clinica.password, rol: 'clinica', nombre: clinica.nombre, referenciaId: clinica.id, activo: true };
-      const users = getUsers();
-      users.push(user);
-      setUsers(users);
-    }
+  async function loginClinica(username, password) {
+    const r = await loginServidor('clinica', String(username || '').trim(), password);
+    if (!r.success) return { success: false, message: r.message };
+    const clinica = r.registro;
+    const user = { id: 'USR-' + clinica.id, username: clinica.usuario, rol: 'clinica', nombre: clinica.nombre, referenciaId: clinica.id, activo: true };
     setCurrentUser(user);
     logAction('Inicio de sesión', `Ingreso clínica ${clinica.nombre}`);
     return { success: true, rol: 'clinica', user, clinica };
