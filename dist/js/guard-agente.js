@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function logout() {
-    if (current) logAction('Cierre de sesión', `Salida de ${current.username}`);
+    fetch((location.pathname.indexOf('/examples/') !== -1 ? '../../api/' : '../api/') + 'logout.php', { method: 'POST', credentials: 'same-origin', keepalive: true }).catch(() => undefined);
     try { localStorage.removeItem('ars_current_user'); } catch {}
     try { localStorage.removeItem('token'); } catch {}
     try { localStorage.removeItem('usuario'); } catch {}

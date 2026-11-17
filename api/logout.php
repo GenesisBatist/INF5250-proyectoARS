@@ -14,7 +14,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
 ars_sesion_iniciar();
 if (!empty($_SESSION['usuario_id'])) {
     try {
-        ars_registrar_evento_sesion(ars_pdo(), 'logout', (string) $_SESSION['usuario_id'], (string) ($_SESSION['rol'] ?? ''));
+        ars_registrar_evento_sesion(ars_pdo(), 'logout', ars_sesion_texto('usuario_id'), ars_sesion_texto('rol'));
     } catch (Throwable $e) {
         error_log('logout.php: ' . $e->getMessage());
     }

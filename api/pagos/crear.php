@@ -36,6 +36,6 @@ $res = (new PagoService())->solicitarPago(
 );
 
 if ($res['estado'] === 'creado') {
-    ars_send_json(['success' => true, 'referencia' => $res['referencia'], 'estadoProveedor' => $res['estadoProveedor']]);
+    ars_send_json(['success' => true, 'referencia' => $res['referencia'] ?? '', 'estadoProveedor' => $res['estadoProveedor'] ?? '']);
 }
 ars_send_json(['success' => false, 'error' => $res['motivo'] ?? 'No se pudo crear el pago'], $res['estado'] === 'invalido' ? 422 : 502);

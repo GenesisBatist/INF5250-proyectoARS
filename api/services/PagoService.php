@@ -58,20 +58,23 @@ final class PagoService
             return ['estado' => 'fallido', 'motivo' => 'No fue posible comunicarse con el proveedor de pagos.'];
         }
 
-        $pago = json_decode($resp['body'] ?? '', true);
-        if (($resp['status'] ?? 0) !== 200 || !is_array($pago) || !isset($pago['id'])) {
-            error_log('PagoService: respuesta no exitosa del proveedor (HTTP ' . (int) ($resp['status'] ?? 0) . ').');
+        $pago = json_decode($resp['body'], true);
+        if ($resp['status'] !== 200 || !is_array($pago) || !isset($pago['id'])) {
+            error_log('PagoService: respuesta no exitosa del proveedor (HTTP ' . $resp['status'] . ').');
             return ['estado' => 'fallido', 'motivo' => 'El proveedor de pagos rechazó la solicitud.'];
         }
 
         return [
             'estado' => 'creado',
-            'referencia' => (string) $pago['id'],
-            'estadoProveedor' => (string) ($pago['status'] ?? ''),
+            'referencia' => is_scalar($pago['id']) ? (string) $pago['id'] : '',
+            'estadoProveedor' => is_scalar($pago['status'] ?? null) ? (string) $pago['status'] : '',
         ];
     }
 
-    /** @return array{status:int, body:string} */
+    /**
+     * @param array<int,string> $cabeceras
+     * @return array{status:int, body:string}
+     */
     private static function enviarConCurl(string $url, array $cabeceras, string $cuerpo): array
     {
         if (!function_exists('curl_init')) {

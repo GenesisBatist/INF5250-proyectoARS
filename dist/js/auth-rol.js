@@ -296,7 +296,7 @@
   function logout() {
     const current = getCurrentUser();
     if (current) logAction('Cierre de sesión', `Salida de ${current.username}`);
-    try { fetch((location.pathname.indexOf('/examples/') !== -1 ? '../../api/' : '../api/') + 'logout.php', { method: 'POST', credentials: 'same-origin', keepalive: true }); } catch {}
+   fetch((location.pathname.indexOf('/examples/') !== -1 ? '../../api/' : '../api/') + 'logout.php', { method: 'POST', credentials: 'same-origin', keepalive: true }).catch(() => undefined);
     try { localStorage.removeItem(STORAGE_KEYS.currentUser); } catch {}
     try { localStorage.removeItem('usuario'); } catch {}
     try { localStorage.removeItem('nombre'); } catch {}

@@ -17,11 +17,12 @@ if (in_array('--real', $argv, true)) {
     exit($r['estado'] === 'creado' ? 0 : 1);
 }
 
-$ok = 0; $fallos = 0;
+/** @var list<bool> $resultados */
+$resultados = [];
 function verificar(string $nombre, bool $condicion): void {
-    global $ok, $fallos;
+    global $resultados;
     echo ($condicion ? '[OK]    ' : '[FALLO] ') . $nombre . "\n";
-    $condicion ? $ok++ : $fallos++;
+    $resultados[] = $condicion;
 }
 
 $exito = fn() => ['status' => 200, 'body' => json_encode(['id' => 'pi_prueba123', 'status' => 'requires_payment_method'])];
@@ -29,7 +30,7 @@ $rechazo = fn() => ['status' => 400, 'body' => json_encode(['error' => ['message
 $caido = function () { throw new RuntimeException('sin red'); };
 
 $r = (new PagoService($exito, 'sk_test_simulada'))->solicitarPago(5000, 'CLI-001', '2026-11');
-verificar('Pago válido devuelve estado "creado" y la referencia pi_', $r['estado'] === 'creado' && $r['referencia'] === 'pi_prueba123');
+verificar('Pago válido devuelve estado "creado" y la referencia pi_', $r['estado'] === 'creado' && ($r['referencia'] ?? '') === 'pi_prueba123');
 
 $r = (new PagoService($exito, 'sk_test_simulada'))->solicitarPago(0, 'CLI-001', '2026-11');
 verificar('Monto cero es rechazado como inválido', $r['estado'] === 'invalido');
@@ -44,7 +45,7 @@ $r = (new PagoService($exito, ''))->solicitarPago(5000, 'CLI-001', '2026-11');
 verificar('Sin clave configurada devuelve "fallido"', $r['estado'] === 'fallido');
 
 $r = (new PagoService($rechazo, 'sk_test_simulada'))->solicitarPago(5000, 'CLI-001', '2026-11');
-verificar('Rechazo del proveedor devuelve "fallido" sin exponer detalles internos', $r['estado'] === 'fallido' && !str_contains(json_encode($r), 'detalle interno'));
+verificar('Rechazo del proveedor devuelve "fallido" sin exponer detalles internos', $r['estado'] === 'fallido' && !str_contains((string) json_encode($r), 'detalle interno'));
 
 $r = (new PagoService($caido, 'sk_test_simulada'))->solicitarPago(5000, 'CLI-001', '2026-11');
 verificar('Falla de red devuelve "fallido" sin lanzar excepción', $r['estado'] === 'fallido');
@@ -54,5 +55,7 @@ $espia = function (string $url, array $cab, string $cuerpo) use (&$visto) { $vis
 (new PagoService($espia, 'sk_test_simulada'))->solicitarPago(5000, 'CLI-001', '2026-11');
 verificar('La solicitud usa HTTPS, Bearer y envía monto, moneda y referencia', str_starts_with($visto, 'https://api.stripe.com/v1/payment_intents') && str_contains($visto, 'Bearer ') && str_contains($visto, 'amount=5000') && str_contains($visto, 'currency=usd') && str_contains($visto, 'metadata%5Bclinica%5D=CLI-001'));
 
+$ok = count(array_filter($resultados));
+$fallos = count($resultados) - $ok;
 echo "\nResultado: $ok correctas, $fallos con fallo.\n";
 exit($fallos === 0 ? 0 : 1);

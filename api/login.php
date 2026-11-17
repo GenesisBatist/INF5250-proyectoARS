@@ -12,9 +12,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
 }
 
 $body = ars_read_json_body();
-$rol = (string) ($body['rol'] ?? '');
-$usuario = trim((string) ($body['username'] ?? ''));
-$password = (string) ($body['password'] ?? '');
+$rol = is_string($body['rol'] ?? null) ? $body['rol'] : '';
+$usuario = is_string($body['username'] ?? null) ? trim($body['username']) : '';
+$password = is_string($body['password'] ?? null) ? $body['password'] : '';
 
 // Mensaje general: nunca revela si falló el usuario, la contraseña o el rol.
 function ars_login_fail(): never
@@ -52,12 +52,12 @@ try {
         $tabla = 'ars_afiliados';
     }
 
-    $row = $stmt->fetch();
-    if (!$row) {
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!is_array($row)) {
         ars_login_fail();
     }
 
-    $guardada = (string) ($row['password'] ?? '');
+    $guardada = is_string($row['password'] ?? null) ? $row['password'] : '';
     $esHash = $guardada !== '' && password_get_info($guardada)['algo'] !== null;
 
     if ($esHash) {
