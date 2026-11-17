@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function logout() {
+    if (current) logAction('Cierre de sesión', `Salida de ${current.username}`);
     try { localStorage.removeItem('ars_current_user'); } catch {}
     try { localStorage.removeItem('token'); } catch {}
     try { localStorage.removeItem('usuario'); } catch {}

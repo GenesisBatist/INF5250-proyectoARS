@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/sesion-segura.php';
 
 ars_handle_cors();
 
@@ -18,6 +19,12 @@ $password = (string) ($body['password'] ?? '');
 // Mensaje general: nunca revela si falló el usuario, la contraseña o el rol.
 function ars_login_fail(): never
 {
+    global $usuario, $rol;
+    try {
+        ars_registrar_evento_sesion(ars_pdo(), 'login_fallido', $usuario, $rol); // solo usuario y rol; jamás la contraseña
+    } catch (Throwable $e) {
+        error_log('login.php: ' . $e->getMessage());
+    }
     usleep(300000); // pequeña espera para frenar intentos repetidos
     ars_send_json(['success' => false, 'message' => 'Credenciales inválidas'], 401);
 }
@@ -74,12 +81,13 @@ try {
     $registro = $defs[$tabla]['fromRow']($row);
     unset($registro['password']);
 
-    session_set_cookie_params(['httponly' => true, 'samesite' => 'Lax']);
-    session_start();
+    ars_sesion_iniciar();
     session_regenerate_id(true);
     $_SESSION['usuario_id'] = $registro['id'];
     $_SESSION['rol'] = $rol;
     $_SESSION['inicio'] = time();
+    $_SESSION['ultima_actividad'] = time();
+    ars_registrar_evento_sesion($pdo, 'login', (string) $registro['id'], $rol);
 
     ars_send_json(['success' => true, 'rol' => $rol, 'registro' => $registro]);
 } catch (Throwable $e) {
