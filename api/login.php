@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/sesion-segura.php';
 
 ars_handle_cors();
 
@@ -11,13 +12,19 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
 }
 
 $body = ars_read_json_body();
-$rol = (string) ($body['rol'] ?? '');
-$usuario = trim((string) ($body['username'] ?? ''));
-$password = (string) ($body['password'] ?? '');
+$rol = is_string($body['rol'] ?? null) ? $body['rol'] : '';
+$usuario = is_string($body['username'] ?? null) ? trim($body['username']) : '';
+$password = is_string($body['password'] ?? null) ? $body['password'] : '';
 
 // Mensaje general: nunca revela si falló el usuario, la contraseña o el rol.
 function ars_login_fail(): never
 {
+    global $usuario, $rol;
+    try {
+        ars_registrar_evento_sesion(ars_pdo(), 'login_fallido', $usuario, $rol); // solo usuario y rol; jamás la contraseña
+    } catch (Throwable $e) {
+        error_log('login.php: ' . $e->getMessage());
+    }
     usleep(300000); // pequeña espera para frenar intentos repetidos
     ars_send_json(['success' => false, 'message' => 'Credenciales inválidas'], 401);
 }
@@ -45,12 +52,12 @@ try {
         $tabla = 'ars_afiliados';
     }
 
-    $row = $stmt->fetch();
-    if (!$row) {
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!is_array($row)) {
         ars_login_fail();
     }
 
-    $guardada = (string) ($row['password'] ?? '');
+    $guardada = is_string($row['password'] ?? null) ? $row['password'] : '';
     $esHash = $guardada !== '' && password_get_info($guardada)['algo'] !== null;
 
     if ($esHash) {
@@ -74,12 +81,13 @@ try {
     $registro = $defs[$tabla]['fromRow']($row);
     unset($registro['password']);
 
-    session_set_cookie_params(['httponly' => true, 'samesite' => 'Lax']);
-    session_start();
+    ars_sesion_iniciar();
     session_regenerate_id(true);
     $_SESSION['usuario_id'] = $registro['id'];
     $_SESSION['rol'] = $rol;
     $_SESSION['inicio'] = time();
+    $_SESSION['ultima_actividad'] = time();
+    ars_registrar_evento_sesion($pdo, 'login', (string) $registro['id'], $rol);
 
     ars_send_json(['success' => true, 'rol' => $rol, 'registro' => $registro]);
 } catch (Throwable $e) {
