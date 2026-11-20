@@ -3,8 +3,12 @@
 declare(strict_types=1);
 
 require dirname(__DIR__) . '/bootstrap.php';
+require dirname(__DIR__) . '/sesion-segura.php';
 
 ars_handle_cors();
+
+// Solo usuarios con sesión válida pueden usar el almacenamiento (OWASP A01).
+ars_requerir_sesion();
 
 if (strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
     ars_send_json([
@@ -38,9 +42,9 @@ try {
         'deleted' => count($keys),
     ]);
 } catch (Throwable $error) {
+    error_log('storage/clear.php: ' . $error->getMessage());
     ars_send_json([
         'ok' => false,
         'message' => 'No se pudo limpiar el almacenamiento',
-        'error' => $error->getMessage(),
     ], 500);
 }

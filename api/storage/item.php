@@ -3,8 +3,12 @@
 declare(strict_types=1);
 
 require dirname(__DIR__) . '/bootstrap.php';
+require dirname(__DIR__) . '/sesion-segura.php';
 
 ars_handle_cors();
+
+// Solo usuarios con sesión válida pueden usar el almacenamiento (OWASP A01).
+ars_requerir_sesion();
 
 $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
 
@@ -69,9 +73,9 @@ try {
         'message' => 'Método no permitido',
     ], 405);
 } catch (Throwable $error) {
+    error_log('storage/item.php: ' . $error->getMessage());
     ars_send_json([
         'ok' => false,
         'message' => 'No se pudo procesar el elemento de almacenamiento',
-        'error' => $error->getMessage(),
     ], 500);
 }

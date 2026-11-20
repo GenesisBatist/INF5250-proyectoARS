@@ -96,3 +96,25 @@ function ars_sesion_validar(?PDO $pdo = null, ?int $ahora = null): ?array
     $_SESSION['ultima_actividad'] = $ahora;
     return ['usuario_id' => ars_sesion_texto('usuario_id'), 'rol' => ars_sesion_texto('rol')];
 }
+
+/**
+ * Exige una sesión válida (con expiración por inactividad). Si no la hay, responde 401 y termina.
+ * Libera el bloqueo de la sesión al terminar para no frenar las peticiones paralelas del navegador.
+ *
+ * @return array{usuario_id:string, rol:string}
+ */
+function ars_requerir_sesion(): array
+{
+    try {
+        $sesion = ars_sesion_validar(ars_pdo());
+    } catch (Throwable $e) {
+        $sesion = ars_sesion_validar();
+    }
+    if ($sesion === null) {
+        ars_send_json(['ok' => false, 'message' => 'No autorizado'], 401);
+    }
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+    return $sesion;
+}
