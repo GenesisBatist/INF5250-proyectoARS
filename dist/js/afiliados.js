@@ -367,6 +367,7 @@ function renderTablaAfiliados() {
           <td>${escapeHtml(formatearFechaHora(a.fechaRegistro || a.fechaCreacion))}</td>
           <td>
             <button type="button" class="btn btn-sm btn-primary" onclick="editarAfiliado('${escapeHtml(a.id)}')">Editar</button>
+            <button type="button" class="btn btn-sm btn-outline-danger ms-1" onclick="eliminarAfiliado('${escapeHtml(a.id)}')">Eliminar</button>
           </td>
         </tr>
       `;
@@ -410,6 +411,54 @@ function editarAfiliado(id) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 window.editarAfiliado = editarAfiliado;
+
+function leerListaLocal(clave) {
+  try {
+    const valor = JSON.parse(localStorage.getItem(clave) || '[]');
+    return Array.isArray(valor) ? valor : [];
+  } catch {
+    return [];
+  }
+}
+
+// RF-03: eliminar un afiliado. Solo se permite si no tiene historial asociado; si lo tiene, se sugiere pasarlo a inactivo.
+function eliminarAfiliado(id) {
+  const afiliados = leerListaLocal('ars_afiliados');
+  const afiliado = afiliados.find(a => String(a.id) === String(id));
+  if (!afiliado) {
+    alert('No se encontró el afiliado seleccionado.');
+    return;
+  }
+
+  const nombre = afiliado.nombre || afiliado.afiliado || afiliado.id;
+  const dep = ARSAfiliadosReglas.contarDependencias(afiliado, {
+    autorizaciones: leerListaLocal('ars_autorizaciones'),
+    servicios: leerListaLocal('ars_servicios_clinica'),
+    citas: leerListaLocal('ars_citas_clinica'),
+    reclamaciones: [...leerListaLocal('ars_reclamaciones'), ...leerListaLocal('ars_reclamos')]
+  });
+
+  if (dep.total > 0) {
+    alert(
+      `No se puede eliminar a ${nombre} porque tiene ${dep.total} registro(s) asociado(s) ` +
+      `(autorizaciones: ${dep.autorizaciones}, servicios: ${dep.servicios}, citas: ${dep.citas}, reclamaciones: ${dep.reclamaciones}).\n` +
+      'Para conservar el historial, cambie su estado a "inactivo".'
+    );
+    return;
+  }
+
+  if (!confirm(`¿Eliminar al afiliado ${nombre} (${afiliado.id})? Esta acción no se puede deshacer.`)) return;
+
+  const resultado = ARSAfiliadosReglas.quitarAfiliado(afiliado.id, afiliados, leerListaLocal('ars_users'));
+  localStorage.setItem('ars_afiliados', JSON.stringify(resultado.afiliados));
+  localStorage.setItem('ars_users', JSON.stringify(resultado.usuarios));
+  registrarAuditoria('Eliminar afiliado', `Se eliminó el afiliado ${nombre} (${afiliado.cedula})`);
+
+  if (document.getElementById('afiliadoEditId').value === String(afiliado.id)) cancelarEdicionAfiliado();
+  renderTablaAfiliados();
+  alert('Afiliado eliminado correctamente.');
+}
+window.eliminarAfiliado = eliminarAfiliado;
 
 function cancelarEdicionAfiliado() {
   document.getElementById('formAfiliado')?.reset();
