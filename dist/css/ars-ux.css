@@ -1,0 +1,64 @@
+/* ARS Salud - capa de diseño (UX/UI). Se carga después de adminlte.css y ars-pro-theme.css */
+:root{
+  --ux-font:'Plus Jakarta Sans','Source Sans 3',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --ux-ink:#14213d; --ux-muted:#5b6b82; --ux-line:#e3e9f2; --ux-bg:#f4f7fb;
+  --ux-brand:#0e7c86; --ux-brand-2:#14b8a6; --ux-navy:#0b2545;
+  --ux-agente:#1f4b8f; --ux-clinica:#d97706; --ux-afiliado:#0891b2; --ux-proveedor:#7c3aed;
+}
+body,.app-wrapper,.login-ux{font-family:var(--ux-font)}
+
+/* ---------- Selección de rol y logins ---------- */
+.login-ux{min-height:100vh;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);background:#fff;color:var(--ux-ink)}
+.login-ux .brand-pane{position:relative;overflow:hidden;color:#fff;padding:3rem 3.2rem;display:flex;flex-direction:column;justify-content:space-between;
+  background:radial-gradient(1200px 500px at -10% -10%,rgba(255,255,255,.14),transparent 60%),linear-gradient(160deg,var(--ux-navy) 0%,var(--accent,#0e7c86) 130%)}
+.login-ux .brand-pane::after{content:"";position:absolute;right:-120px;bottom:-120px;width:420px;height:420px;border-radius:50%;background:rgba(255,255,255,.07)}
+.login-ux .brand-logo{display:flex;align-items:center;gap:.7rem;font-weight:800;font-size:1.25rem;letter-spacing:.01em}
+.login-ux .brand-logo .mark{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.16);display:grid;place-items:center;font-size:1.3rem}
+.login-ux .brand-copy h1{font-size:2.3rem;line-height:1.15;font-weight:800;margin:0 0 .8rem}
+.login-ux .brand-copy p{font-size:1.05rem;opacity:.88;max-width:30rem;margin:0}
+.login-ux .brand-points{list-style:none;padding:0;margin:1.6rem 0 0;display:grid;gap:.6rem;font-size:.97rem}
+.login-ux .brand-points li{display:flex;gap:.6rem;align-items:center;opacity:.92}
+.login-ux .brand-foot{font-size:.82rem;opacity:.7;position:relative;z-index:1}
+.login-ux .brand-pane>*{position:relative;z-index:1}
+.login-ux .form-pane{display:flex;align-items:center;justify-content:center;padding:2.5rem 1.5rem;background:var(--ux-bg)}
+.login-ux .form-card{width:100%;max-width:25rem;background:#fff;border:1px solid var(--ux-line);border-radius:1.25rem;padding:2rem 1.9rem;box-shadow:0 18px 50px rgba(11,37,69,.10)}
+.login-ux .role-chip{display:inline-flex;align-items:center;gap:.45rem;background:color-mix(in srgb,var(--accent) 12%,#fff);color:var(--accent);font-weight:700;font-size:.8rem;padding:.35rem .75rem;border-radius:999px;margin-bottom:1rem}
+.login-ux h2{font-size:1.55rem;font-weight:800;margin:0 0 .3rem}
+.login-ux .sub{color:var(--ux-muted);margin-bottom:1.4rem;font-size:.95rem}
+.login-ux .form-label{font-weight:600;font-size:.86rem;margin-bottom:.35rem}
+.login-ux .input-group-text{background:#f4f7fb;border-color:#cdd8e7;color:var(--ux-muted);border-radius:.75rem 0 0 .75rem}
+.login-ux .form-control{border-radius:0 .75rem .75rem 0!important;padding:.7rem .85rem}
+.login-ux .btn-ingresar{width:100%;border:0;color:#fff;font-weight:700;padding:.75rem;border-radius:.8rem;background:var(--accent);box-shadow:0 8px 20px color-mix(in srgb,var(--accent) 35%,transparent);transition:transform .15s,box-shadow .15s}
+.login-ux .btn-ingresar:hover{transform:translateY(-1px);filter:brightness(1.05)}
+.login-ux .btn-ingresar[disabled]{opacity:.7;transform:none}
+.login-ux .login-error{display:none;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:.75rem;padding:.65rem .85rem;font-size:.9rem;margin-bottom:1rem}
+.login-ux .login-error.show{display:block}
+.login-ux .volver{display:inline-flex;gap:.4rem;align-items:center;margin-top:1.2rem;color:var(--ux-muted);text-decoration:none;font-size:.9rem}
+.login-ux .volver:hover{color:var(--accent)}
+.login-ux .help{font-size:.82rem;color:var(--ux-muted);margin-top:1rem}
+.rol-agente{--accent:var(--ux-agente)}.rol-clinica{--accent:var(--ux-clinica)}.rol-afiliado{--accent:var(--ux-afiliado)}.rol-proveedor{--accent:var(--ux-proveedor)}
+
+.role-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.9rem;width:100%;max-width:34rem}
+.role-tile{display:flex;gap:.9rem;align-items:center;text-decoration:none;color:var(--ux-ink);background:#fff;border:1px solid var(--ux-line);border-radius:1rem;padding:1rem 1.1rem;transition:transform .15s,box-shadow .15s,border-color .15s}
+.role-tile:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(11,37,69,.12);border-color:var(--accent);color:var(--ux-ink)}
+.role-tile .ico{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:1.35rem;color:#fff;background:var(--accent);flex:none}
+.role-tile b{display:block;font-size:1rem}.role-tile small{color:var(--ux-muted)}
+.select-pane{display:flex;flex-direction:column;justify-content:center;align-items:center;padding:2.5rem 1.5rem;background:var(--ux-bg)}
+.select-pane h2{font-weight:800;margin-bottom:.3rem}.select-pane .sub{color:var(--ux-muted);margin-bottom:1.5rem}
+@media (max-width:900px){.login-ux{grid-template-columns:1fr}.login-ux .brand-pane{padding:1.6rem 1.4rem;min-height:0}.login-ux .brand-copy h1{font-size:1.6rem}.login-ux .brand-points,.login-ux .brand-foot{display:none}.role-grid{grid-template-columns:1fr}}
+
+/* ---------- Interior del sistema (todas las páginas con sesión) ---------- */
+.small-box .inner h3{font-size:clamp(1.35rem,2vw,1.95rem);font-weight:800;white-space:normal;word-break:break-word}
+.small-box .inner p{font-weight:600;opacity:.92}
+.app-header .btn-outline-secondary{color:#fff;border-color:rgba(255,255,255,.55)}
+.app-header .btn-outline-secondary:hover{background:rgba(255,255,255,.16);color:#fff;border-color:#fff}
+.app-sidebar .sidebar-brand{border-bottom:1px solid rgba(255,255,255,.08)}
+.app-sidebar .nav-link{border-radius:.8rem;margin:.1rem .4rem;font-weight:500}
+.page-hero h3{font-weight:800;color:var(--ux-ink)}
+.card-title{font-weight:700;color:var(--ux-ink)}
+.table tbody td{padding-top:.7rem;padding-bottom:.7rem}
+.btn{border-radius:.7rem;font-weight:600}
+.badge{font-weight:700;border-radius:999px;padding:.4em .7em}
+.empty-state{padding:2rem 1rem;color:var(--ux-muted)}
+:focus-visible{outline:3px solid color-mix(in srgb,var(--ux-brand-2) 55%,transparent);outline-offset:2px}
+@media (max-width:991.98px){.app-header .header-pill{display:none}}

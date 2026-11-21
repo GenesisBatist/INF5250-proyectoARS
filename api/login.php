@@ -29,7 +29,7 @@ function ars_login_fail(): never
     ars_send_json(['success' => false, 'message' => 'Credenciales inválidas'], 401);
 }
 
-if (!in_array($rol, ['agente', 'afiliado', 'clinica'], true) || $usuario === '' || $password === '') {
+if (!in_array($rol, ['agente', 'afiliado', 'clinica', 'proveedor'], true) || $usuario === '' || $password === '') {
     ars_login_fail();
 }
 
@@ -45,6 +45,11 @@ try {
         $stmt = $pdo->prepare("SELECT * FROM ars_clinicas WHERE LOWER(usuario) = LOWER(?) AND LOWER(estado) IN ('activa', 'activo') LIMIT 1");
         $stmt->execute([$usuario]);
         $tabla = 'ars_clinicas';
+    } elseif ($rol === 'proveedor') {
+        ars_ensure_tablas_proveedores($pdo);
+        $stmt = $pdo->prepare("SELECT * FROM ars_proveedores WHERE LOWER(usuario) = LOWER(?) AND LOWER(estado) IN ('activa', 'activo') LIMIT 1");
+        $stmt->execute([$usuario]);
+        $tabla = 'ars_proveedores';
     } else {
         $digitos = preg_replace('/\D/', '', $usuario) ?? '';
         $stmt = $pdo->prepare("SELECT * FROM ars_afiliados WHERE (UPPER(id) = UPPER(?) OR (? <> '' AND REPLACE(cedula, '-', '') = ?)) AND LOWER(estado) = 'activo' LIMIT 1");

@@ -269,6 +269,70 @@ function ars_array_defs(): array
                 ], ars_parse_json((string) ($row['extra_json'] ?? '{}'), []));
             },
         ],
+        'ars_proveedores' => [
+            'tableName' => 'ars_proveedores',
+            'columns' => ['id', 'nombre', 'rnc', 'telefono', 'direccion', 'usuario', 'password', 'estado', 'fecha_registro', 'extra_json'],
+            'toRow' => function (array $item): array {
+                $extra = $item;
+                unset($extra['id'], $extra['nombre'], $extra['rnc'], $extra['telefono'], $extra['direccion'], $extra['usuario'], $extra['password'], $extra['estado'], $extra['fechaRegistro']);
+                return [
+                    $item['id'] ?? null,
+                    $item['nombre'] ?? null,
+                    $item['rnc'] ?? null,
+                    $item['telefono'] ?? null,
+                    $item['direccion'] ?? null,
+                    $item['usuario'] ?? null,
+                    $item['password'] ?? null,
+                    $item['estado'] ?? null,
+                    $item['fechaRegistro'] ?? null,
+                    ars_stringify_json($extra),
+                ];
+            },
+            'fromRow' => function (array $row): array {
+                return array_merge([
+                    'id' => $row['id'],
+                    'nombre' => $row['nombre'],
+                    'rnc' => $row['rnc'],
+                    'telefono' => $row['telefono'],
+                    'direccion' => $row['direccion'],
+                    'usuario' => $row['usuario'],
+                    'password' => $row['password'],
+                    'estado' => $row['estado'],
+                    'fechaRegistro' => $row['fecha_registro'],
+                ], ars_parse_json((string) ($row['extra_json'] ?? '{}'), []));
+            },
+        ],
+        'ars_pagos_proveedores' => [
+            'tableName' => 'ars_pagos_proveedores',
+            'columns' => ['id', 'proveedor_id', 'proveedor_nombre', 'periodo', 'monto', 'estado', 'fecha_envio', 'payload_json'],
+            'toRow' => function (array $item, int $index = 0): array {
+                $id = $item['id'] ?? ('PPR-' . ($index + 1));
+                return [
+                    $id,
+                    $item['proveedorId'] ?? null,
+                    $item['proveedorNombre'] ?? null,
+                    $item['periodo'] ?? null,
+                    (float) ($item['monto'] ?? 0),
+                    $item['estado'] ?? null,
+                    $item['fechaEnvio'] ?? null,
+                    ars_stringify_json($item, '{}'),
+                ];
+            },
+            'fromRow' => function (array $row): array {
+                $payload = ars_parse_json((string) ($row['payload_json'] ?? '{}'), []);
+                if (!is_array($payload)) {
+                    $payload = [];
+                }
+                $payload['id'] = $payload['id'] ?? $row['id'];
+                $payload['proveedorId'] = $payload['proveedorId'] ?? $row['proveedor_id'];
+                $payload['proveedorNombre'] = $payload['proveedorNombre'] ?? $row['proveedor_nombre'];
+                $payload['periodo'] = $payload['periodo'] ?? $row['periodo'];
+                $payload['monto'] = $payload['monto'] ?? (float) ($row['monto'] ?? 0);
+                $payload['estado'] = $payload['estado'] ?? $row['estado'];
+                $payload['fechaEnvio'] = $payload['fechaEnvio'] ?? $row['fecha_envio'];
+                return $payload;
+            },
+        ],
         'ars_polizas' => [
             'tableName' => 'ars_polizas',
             'columns' => ['id', 'tipo_plan', 'nombre_plan', 'monto_maximo', 'maximo_anual', 'consumido_anual', 'estado', 'cobertura_json', 'coberturas_json', 'extra_json'],
@@ -727,6 +791,48 @@ function ars_singleton_defs(): array
     return $defs;
 }
 
+/**
+ * Crea las tablas del rol proveedor si no existen. Se llama también desde la lectura,
+ * la escritura y el login, porque estas tablas no vienen en el volcado SQL original.
+ */
+function ars_ensure_tablas_proveedores(PDO $pdo): void
+{
+    static $hecho = false;
+    if ($hecho) {
+        return;
+    }
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS ars_proveedores (
+            id VARCHAR(120) NOT NULL PRIMARY KEY,
+            nombre VARCHAR(150) NULL,
+            rnc VARCHAR(20) NULL,
+            telefono VARCHAR(20) NULL,
+            direccion VARCHAR(255) NULL,
+            usuario VARCHAR(120) NULL,
+            password VARCHAR(255) NULL,
+            estado VARCHAR(30) NULL,
+            fecha_registro VARCHAR(50) NULL,
+            extra_json LONGTEXT NULL,
+            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'
+    );
+
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS ars_pagos_proveedores (
+            id VARCHAR(120) NOT NULL PRIMARY KEY,
+            proveedor_id VARCHAR(120) NULL,
+            proveedor_nombre VARCHAR(150) NULL,
+            periodo VARCHAR(20) NULL,
+            monto DECIMAL(12,2) NULL,
+            estado VARCHAR(50) NULL,
+            fecha_envio VARCHAR(50) NULL,
+            payload_json LONGTEXT NULL,
+            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'
+    );
+    $hecho = true;
+}
+
 function ars_ensure_schema(PDO $pdo): void
 {
     static $ready = false;
@@ -773,6 +879,8 @@ function ars_ensure_schema(PDO $pdo): void
             updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'
     );
+
+    ars_ensure_tablas_proveedores($pdo);
 
     $pdo->exec(
         'CREATE TABLE IF NOT EXISTS ars_pagos_mensuales (
@@ -864,6 +972,9 @@ function ars_read_array_key(PDO $pdo, string $key): ?array
     }
 
     $def = $defs[$key];
+    if (in_array($key, ['ars_proveedores', 'ars_pagos_proveedores'], true)) {
+        ars_ensure_tablas_proveedores($pdo);
+    }
     if (!ars_table_exists($pdo, $def['tableName'])) {
         return null;
     }
@@ -873,7 +984,7 @@ function ars_read_array_key(PDO $pdo, string $key): ?array
     $items = [];
     foreach ($rows as $row) {
         $item = $def['fromRow']($row);
-        if (in_array($key, ['ars_users', 'ars_afiliados', 'ars_clinicas'], true)) {
+        if (in_array($key, ['ars_users', 'ars_afiliados', 'ars_clinicas', 'ars_proveedores'], true)) {
             $item['password'] = ''; // el hash nunca viaja al navegador
         }
         $items[] = $item;
@@ -894,6 +1005,9 @@ function ars_write_array_key(PDO $pdo, string $key, string $rawValue): void
     }
 
     $def = $defs[$key];
+    if (in_array($key, ['ars_proveedores', 'ars_pagos_proveedores'], true)) {
+        ars_ensure_tablas_proveedores($pdo);
+    }
     if (!ars_table_exists($pdo, $def['tableName'])) {
         ars_write_fallback_key($pdo, $key, $rawValue);
         return;
@@ -904,7 +1018,7 @@ function ars_write_array_key(PDO $pdo, string $key, string $rawValue): void
         throw new RuntimeException(sprintf('La clave %s debe contener un arreglo JSON', $key));
     }
 
-    if (in_array($key, ['ars_users', 'ars_afiliados', 'ars_clinicas'], true)) {
+    if (in_array($key, ['ars_users', 'ars_afiliados', 'ars_clinicas', 'ars_proveedores'], true)) {
         $items = ars_proteger_passwords($pdo, $def['tableName'], $items);
     }
 
