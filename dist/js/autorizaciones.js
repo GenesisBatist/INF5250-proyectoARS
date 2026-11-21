@@ -163,7 +163,14 @@ function renderTabla() {
 
   tbody.innerHTML = visibles.length ? visibles.map(a => {
     const comentario = a.comentarioAgente || a.observacionMedica || '-';
-    const action = user.rol === 'agente' ? `<span>${escapeHtml(comentario)}</span>` : `<span>${escapeHtml(comentario)}</span>`;
+    const puedeDecidir = user.rol === 'agente' && String(a.estado).toLowerCase() === 'pendiente';
+    const action = puedeDecidir
+      ? `<div>${escapeHtml(comentario)}</div>
+         <div class="mt-2 d-flex flex-wrap gap-1">
+           <button type="button" class="btn btn-sm btn-success" onclick="decidirAutorizacionAgente('${escapeHtml(a.id)}', 'aprobada')">Aprobar</button>
+           <button type="button" class="btn btn-sm btn-outline-danger" onclick="decidirAutorizacionAgente('${escapeHtml(a.id)}', 'rechazada')">Rechazar</button>
+         </div>`
+      : `<span>${escapeHtml(comentario)}</span>`;
     return `
       <tr>
         <td>${escapeHtml(a.id)}</td>
@@ -179,6 +186,36 @@ function renderTabla() {
 
   renderPaginacion(items.length);
 }
+
+// RF-05: el agente aprueba o rechaza una autorización pendiente.
+function decidirAutorizacionAgente(id, estado) {
+  const user = ARSAuth.getCurrentUser();
+  if (!user || user.rol !== 'agente') {
+    alert('Solo el agente puede aprobar o rechazar autorizaciones.');
+    return;
+  }
+
+  const autorizacion = ARSAuth.getAutorizaciones().find(a => String(a.id) === String(id));
+  let comentario = '';
+  if (estado === 'rechazada') {
+    comentario = (prompt('Escriba el motivo del rechazo (obligatorio):') || '').trim();
+  }
+
+  const afiliado = autorizacion ? ARSAuth.findAfiliado(autorizacion.afiliadoId) : null;
+  const revision = ARSAutorizacionesReglas.validarDecision(autorizacion, estado, comentario, afiliado);
+  if (!revision.ok) {
+    alert(revision.error);
+    return;
+  }
+
+  if (estado === 'aprobada' && !confirm(`¿Aprobar la autorización ${autorizacion.id} de ${autorizacion.afiliadoNombre}?`)) return;
+
+  ARSAuth.decidirAutorizacion(autorizacion.id, estado, comentario);
+  renderTabla();
+  if (typeof renderDesgloseClinica === 'function') renderDesgloseClinica();
+  alert(estado === 'aprobada' ? 'Autorización aprobada.' : 'Autorización rechazada.');
+}
+window.decidirAutorizacionAgente = decidirAutorizacionAgente;
 
 function cargarSelectAfiliados(id) {
   const select = document.getElementById(id);
@@ -369,7 +406,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const rolMessage = document.getElementById('rolMessage');
   const msg = {
-    agente: 'Como Agente ARS, aquí solo ves el listado y el desglose por clínica para control y pago mensual. Se eliminó la sección inferior de decisión manual.',
+    agente: 'Como Agente ARS, aquí ves el listado y el desglose por clínica para control y pago mensual, y puedes aprobar o rechazar las autorizaciones que quedaron pendientes (por ejemplo, servicios no cubiertos por el plan).',
     clinica: 'Como Clínica / Hospital, aquí generas autorizaciones automáticas. Si el afiliado está activo y el servicio está cubierto, la autorización queda aprobada automáticamente.',
     afiliado: 'Como Afiliado, aquí solo consultas el estado de las autorizaciones relacionadas con tu documento.'
   };
