@@ -84,6 +84,20 @@
     </div>
     <div class="app-content">
       <div class="container-fluid">
+        <div class="card card-outline card-secondary mb-4">
+          <div class="card-header"><h3 class="card-title">Filtros de los reportes financieros</h3></div>
+          <div class="card-body">
+            <div class="row g-3 align-items-end">
+              <div class="col-lg-3 col-md-6"><label class="form-label" for="filtroClinica">Clínica</label><select id="filtroClinica" class="form-select form-select-sm"><option value="">Todas</option></select></div>
+              <div class="col-lg-3 col-md-6"><label class="form-label" for="filtroEstado">Estado</label><select id="filtroEstado" class="form-select form-select-sm"><option value="">Todos</option></select></div>
+              <div class="col-lg-2 col-md-4 col-6"><label class="form-label" for="filtroDesde">Desde</label><input type="date" id="filtroDesde" class="form-control form-control-sm"></div>
+              <div class="col-lg-2 col-md-4 col-6"><label class="form-label" for="filtroHasta">Hasta</label><input type="date" id="filtroHasta" class="form-control form-control-sm"></div>
+              <div class="col-lg-2 col-md-4"><button type="button" class="btn btn-outline-secondary btn-sm w-100" id="btnLimpiarFiltros">Limpiar filtros</button></div>
+            </div>
+            <small class="text-muted d-block mt-2" id="infoFiltros">Mostrando todas las facturas.</small>
+          </div>
+        </div>
+
         <div class="row g-3 mb-4">
           <div class="col-lg-3 col-6"><div class="small-box text-bg-info"><div class="inner"><h3 id="totalAfiliados">0</h3><p>Afiliados</p></div><i class="small-box-icon bi bi-people"></i></div></div>
           <div class="col-lg-3 col-6"><div class="small-box text-bg-success"><div class="inner"><h3 id="totalAutorizaciones">0</h3><p>Autorizaciones automáticas</p></div><i class="small-box-icon bi bi-clipboard2-check"></i></div></div>
@@ -131,11 +145,11 @@
             <table class="table table-hover align-middle mb-0">
               <thead>
                 <tr>
-                  <th>Clínica</th><th>Servicios</th><th>Facturas</th><th>Total ARS</th><th>Total paciente</th><th>Pendiente ARS</th>
+                  <th>Clínica</th><th>Facturas</th><th>Total ARS</th><th>Total paciente</th><th>Pendiente ARS</th>
                 </tr>
               </thead>
               <tbody id="tablaClinicasResumen">
-                <tr><td colspan="6" class="text-center py-4 text-muted">No hay datos para mostrar.</td></tr>
+                <tr><td colspan="5" class="text-center py-4 text-muted">No hay datos para mostrar.</td></tr>
               </tbody>
             </table>
           </div>
@@ -163,6 +177,7 @@
 <script src="../dist/js/hybrid-storage.js"></script>
 <script src="../dist/js/auth-rol.js"></script>
 <script src="../dist/js/ars-finanzas-sync.js"></script>
+<script src="../dist/js/reportes-filtros.js"></script>
 <script src="../dist/js/reportes.js"></script>
 </body>
 </html>

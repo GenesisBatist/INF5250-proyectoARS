@@ -46,7 +46,7 @@
   }
 
   function cargarResumenes() {
-    const { afiliados, autorizaciones, facturas, clinicas, reportesClinica } = obtenerDatos();
+    const { afiliados, autorizaciones, facturas, clinicas } = obtenerDatos();
     setText('totalAfiliados', afiliados.length);
     setText('totalAutorizaciones', autorizaciones.length);
     setText('totalFacturas', facturas.length);
@@ -59,24 +59,23 @@
     setText('autAprobadas', aprobadas);
     setText('autRechazadas', rechazadas);
 
-    const totalFacturado = reportesClinica.reduce((s, r) => s + Number(r.totalSeguro || 0) + Number(r.totalPaciente || 0), 0);
-    const totalSeguro = reportesClinica.reduce((s, r) => s + Number(r.totalSeguro || 0), 0);
-    const totalPaciente = reportesClinica.reduce((s, r) => s + Number(r.totalPaciente || 0), 0);
-    setText('montoFacturado', money(totalFacturado));
-    setText('montoSeguro', money(totalSeguro));
-    setText('montoPaciente', money(totalPaciente));
+    const tot = window.ARSReportesFiltros.totales(getFacturasFiltradas());
+    setText('montoFacturado', money(tot.facturado));
+    setText('montoSeguro', money(tot.seguro));
+    setText('montoPaciente', money(tot.paciente));
+  }
+
+  function leerFiltros() {
+    const val = (id) => document.getElementById(id)?.value || '';
+    return { clinicaId: val('filtroClinica'), estado: val('filtroEstado'), desde: val('filtroDesde'), hasta: val('filtroHasta') };
+  }
+
+  function getFacturasFiltradas() {
+    return window.ARSReportesFiltros.filtrarFacturas(obtenerDatos().facturas, leerFiltros());
   }
 
   function construirHistorialPago() {
-    const { reportesClinica } = obtenerDatos();
-    return reportesClinica.map(r => ({
-      clinica: r.clinicaNombre || 'Clínica sin nombre',
-      servicios: Number(r.totalProcesosClinicos || 0),
-      facturas: Number(r.totalFacturasAutorizadas || 0),
-      totalARS: Number(r.totalSeguro || 0),
-      totalPaciente: Number(r.totalPaciente || 0),
-      pendienteARS: String(r.estadoPago || '').toLowerCase() === 'aceptado_clinica' ? 0 : Number(r.totalSeguro || 0)
-    })).sort((a, b) => a.clinica.localeCompare(b.clinica, 'es'));
+    return window.ARSReportesFiltros.resumenPorClinica(getFacturasFiltradas());
   }
 
   function getHistorialFiltrado() {
@@ -106,7 +105,6 @@
     tbody.innerHTML = visibles.length ? visibles.map(r => `
       <tr>
         <td>${escapeHtml(r.clinica)}</td>
-        <td>${r.servicios}</td>
         <td>${r.facturas}</td>
         <td>${money(r.totalARS)}</td>
         <td>${money(r.totalPaciente)}</td>
@@ -118,6 +116,53 @@
     if (btnNext) btnNext.disabled = paginaHistorialPago >= totalPaginas;
   }
 
+  // Llena las listas de clínica y estado con lo que hay en los datos, sin perder lo que el agente ya eligió.
+  function llenarOpcionesFiltros() {
+    const { facturas, clinicas } = obtenerDatos();
+    const selClinica = document.getElementById('filtroClinica');
+    const selEstado = document.getElementById('filtroEstado');
+    if (selClinica) {
+      const actual = selClinica.value;
+      selClinica.innerHTML = '<option value="">Todas</option>' + clinicas
+        .map(c => ({ id: String(c.id ?? ''), nombre: c.nombre || c.clinica || c.nombreClinica || `Clínica ${c.id}` }))
+        .filter(c => c.id)
+        .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+        .map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.nombre)}</option>`).join('');
+      selClinica.value = actual;
+    }
+    if (selEstado) {
+      const actual = selEstado.value;
+      selEstado.innerHTML = '<option value="">Todos</option>' + window.ARSReportesFiltros.estadosDisponibles(facturas)
+        .map(e => `<option value="${escapeHtml(e.valor)}">${escapeHtml(e.etiqueta)}</option>`).join('');
+      selEstado.value = actual;
+    }
+  }
+
+  function actualizarInfoFiltros() {
+    const total = obtenerDatos().facturas.length;
+    const visibles = getFacturasFiltradas().length;
+    const f = leerFiltros();
+    const hayFiltro = !!(f.clinicaId || f.estado || f.desde || f.hasta);
+    setText('infoFiltros', hayFiltro ? `Filtros activos: ${visibles} de ${total} facturas.` : 'Mostrando todas las facturas.');
+  }
+
+  function aplicarFiltros() {
+    paginaHistorialPago = 1;
+    cargarResumenes();
+    renderHistorialPago();
+    actualizarInfoFiltros();
+  }
+
+  function bindFiltros() {
+    ['filtroClinica', 'filtroEstado', 'filtroDesde', 'filtroHasta'].forEach(id => {
+      document.getElementById(id)?.addEventListener('change', aplicarFiltros);
+    });
+    document.getElementById('btnLimpiarFiltros')?.addEventListener('click', function () {
+      ['filtroClinica', 'filtroEstado', 'filtroDesde', 'filtroHasta'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+      aplicarFiltros();
+    });
+  }
+
   function bindHistorialPago() {
     document.getElementById('buscarHistorialPago')?.addEventListener('input', function () { paginaHistorialPago = 1; renderHistorialPago(); });
     document.getElementById('limiteHistorialPago')?.addEventListener('change', function () { paginaHistorialPago = 1; renderHistorialPago(); });
@@ -125,10 +170,21 @@
     document.getElementById('btnNextHistorialPago')?.addEventListener('click', function () { const totalPaginas = Math.max(1, Math.ceil(getHistorialFiltrado().length / getPageSize())); if (paginaHistorialPago < totalPaginas) { paginaHistorialPago++; renderHistorialPago(); } });
   }
 
+  // syncAll() guarda en localStorage y ese guardado avisa con 'ars:storage-sync', que vuelve a llamar a refresh().
+  // Sin esta bandera la página se llama a sí misma sin fin (desbordamiento de pila). Se ignora el aviso mientras se refresca.
+  let refrescando = false;
   function refresh() {
-    window.ARSFinanzasSync?.syncAll?.();
-    cargarResumenes();
-    renderHistorialPago();
+    if (refrescando) return;
+    refrescando = true;
+    try {
+      window.ARSFinanzasSync?.syncAll?.();
+      llenarOpcionesFiltros();
+      cargarResumenes();
+      renderHistorialPago();
+      actualizarInfoFiltros();
+    } finally {
+      refrescando = false;
+    }
   }
 
   function refreshFromSql() {
@@ -146,6 +202,7 @@
     if (!user) return;
     normalizeChrome(user);
     bindHistorialPago();
+    bindFiltros();
     refreshFromSql();
     window.addEventListener('focus', refreshFromSql);
     window.addEventListener('ars:storage-sync', refresh);
