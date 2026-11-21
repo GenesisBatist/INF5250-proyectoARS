@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Proveedores y pagos | ARS Salud</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans@5.0.8/index.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.0.12/index.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../dist/css/adminlte.css">
+  <link rel="stylesheet" href="../dist/css/ars-pro-theme.css">
+  <link rel="stylesheet" href="../dist/css/ars-ux.css">
+</head>
+<body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
+<div class="app-wrapper">
+  <nav class="app-header navbar navbar-expand bg-body"><div class="container-fluid">
+    <a class="navbar-brand brand-text-strong" href="agente-dashboard.html">Sistema ARS Salud</a>
+    <div class="ms-auto d-flex align-items-center gap-2"><span class="header-pill">Rol Agente</span><span id="userName" class="fw-semibold"></span>
+    <button class="btn btn-outline-secondary btn-sm" onclick="ARSAuth.logout()">Salir</button></div></div></nav>
+  <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
+    <div class="sidebar-brand"><a href="agente-dashboard.html" class="brand-link"><span class="brand-text fw-semibold"><i class="bi bi-heart-pulse-fill me-2"></i>Agente ARS</span></a></div>
+    <div class="sidebar-wrapper"><nav class="mt-2"><ul class="nav sidebar-menu flex-column" role="menu">
+      <li class="nav-item"><a class="nav-link" href="agente-dashboard.html"><i class="nav-icon bi bi-house"></i><p>Dashboard</p></a></li>
+      <li class="nav-item"><a class="nav-link" href="afiliados.html"><i class="nav-icon bi bi-people"></i><p>Afiliados</p></a></li>
+      <li class="nav-item"><a class="nav-link" href="proveedores.html"><i class="nav-icon bi bi-hospital"></i><p>Clínicas</p></a></li>
+      <li class="nav-item"><a class="nav-link active" href="registro-proveedores.html"><i class="nav-icon bi bi-truck"></i><p>Proveedores</p></a></li>
+      <li class="nav-item"><a class="nav-link" href="polizas.html"><i class="nav-icon bi bi-file-medical"></i><p>Pólizas</p></a></li>
+      <li class="nav-item"><a class="nav-link" href="autorizaciones.html"><i class="nav-icon bi bi-clipboard2-check"></i><p>Autorizaciones</p></a></li>
+      <li class="nav-item"><a class="nav-link" href="facturas.html"><i class="nav-icon bi bi-receipt"></i><p>Facturas clínicas</p></a></li>
+      <li class="nav-item"><a class="nav-link" href="reclamaciones.html"><i class="nav-icon bi bi-journal-text"></i><p>Historial reclamaciones</p></a></li>
+      <li class="nav-item"><a class="nav-link" href="reportes.html"><i class="nav-icon bi bi-bar-chart-line"></i><p>Reportes</p></a></li>
+    </ul></nav></div>
+  </aside>
+  <main class="app-main"><div class="app-content"><div class="container-fluid py-4">
+    <div class="page-hero mb-4"><h3 class="mb-1">Proveedores y pagos</h3><p class="mb-0 text-body-secondary">Registra proveedores (laboratorios, farmacias, especialistas), crea su acceso y envíales pagos por los servicios prestados.</p></div>
+    <div id="aviso" class="alert d-none" role="alert"></div>
+
+    <div class="card mb-4"><div class="card-header"><h3 class="card-title mb-0">Nuevo proveedor</h3></div><div class="card-body">
+      <form id="formProveedor" class="row g-3" novalidate>
+        <div class="col-12 col-md-6 col-xl-4"><label class="form-label" for="pNombre">Nombre *</label><input class="form-control" id="pNombre" maxlength="40" required></div>
+        <div class="col-12 col-md-6 col-xl-4"><label class="form-label" for="pRnc">RNC *</label><input class="form-control" id="pRnc" maxlength="11" inputmode="numeric" placeholder="00000000000" required></div>
+        <div class="col-12 col-md-6 col-xl-4"><label class="form-label" for="pTipo">Tipo *</label><select class="form-select" id="pTipo"><option>Laboratorio</option><option>Farmacia</option><option>Especialista</option><option>Imágenes</option><option>Otro</option></select></div>
+        <div class="col-12 col-md-6 col-xl-4"><label class="form-label" for="pTelefono">Teléfono *</label><input class="form-control" id="pTelefono" maxlength="10" inputmode="numeric" placeholder="8091234567" required></div>
+        <div class="col-12 col-md-6 col-xl-4"><label class="form-label" for="pDireccion">Dirección *</label><input class="form-control" id="pDireccion" maxlength="60" required></div>
+        <div class="col-12 col-md-6 col-xl-4"><label class="form-label" for="pUsuario">Usuario de acceso *</label><input class="form-control" id="pUsuario" maxlength="15" autocomplete="off" required></div>
+        <div class="col-12 col-md-6 col-xl-4"><label class="form-label" for="pPassword">Contraseña *</label><input type="password" class="form-control" id="pPassword" maxlength="15" autocomplete="new-password" required></div>
+        <div class="col-12"><button class="btn btn-primary" type="submit"><i class="bi bi-plus-circle me-1"></i>Registrar proveedor</button></div>
+      </form></div></div>
+
+    <div class="card mb-4"><div class="card-header"><h3 class="card-title mb-0">Proveedores registrados</h3></div>
+      <div class="card-body table-responsive"><table class="table table-striped table-hover align-middle mb-0">
+        <thead><tr><th>ID</th><th>Nombre</th><th>Tipo</th><th>RNC</th><th>Teléfono</th><th>Usuario</th><th>Estado</th></tr></thead>
+        <tbody id="cuerpoProveedores"></tbody></table></div></div>
+
+    <div class="card mb-4"><div class="card-header"><h3 class="card-title mb-0">Registrar pago a un proveedor</h3></div><div class="card-body">
+      <form id="formPago" class="row g-3" novalidate>
+        <div class="col-12 col-md-6 col-xl-4"><label class="form-label" for="gProveedor">Proveedor *</label><select class="form-select" id="gProveedor" required></select></div>
+        <div class="col-12 col-md-6 col-xl-2"><label class="form-label" for="gPeriodo">Período *</label><input class="form-control" id="gPeriodo" placeholder="AAAA-MM" maxlength="7" required></div>
+        <div class="col-12 col-md-6 col-xl-3"><label class="form-label" for="gConcepto">Servicio / concepto *</label><input class="form-control" id="gConcepto" maxlength="80" placeholder="Ej. Estudios de laboratorio" required></div>
+        <div class="col-12 col-md-6 col-xl-3"><label class="form-label" for="gMonto">Monto (RD$) *</label><input class="form-control" id="gMonto" type="number" min="0.01" step="0.01" required></div>
+        <div class="col-12 col-md-6 col-xl-4"><label class="form-label" for="gObs">Observación</label><input class="form-control" id="gObs" maxlength="120"></div>
+        <div class="col-12 col-md-6 col-xl-3"><label class="form-label" for="gEstado">Estado</label><select class="form-select" id="gEstado"><option value="pendiente">Pendiente</option><option value="pagado">Pagado</option></select></div>
+        <div class="col-12"><button class="btn btn-success" type="submit"><i class="bi bi-cash-coin me-1"></i>Registrar pago</button></div>
+      </form></div></div>
+
+    <div class="card"><div class="card-header"><h3 class="card-title mb-0">Pagos a proveedores</h3></div>
+      <div class="card-body table-responsive"><table class="table table-hover align-middle mb-0">
+        <thead><tr><th>ID</th><th>Proveedor</th><th>Período</th><th>Servicio</th><th class="text-end">Monto</th><th>Estado</th><th>Acción</th></tr></thead>
+        <tbody id="cuerpoPagos"></tbody></table></div></div>
+  </div></div></main>
+</div>
+<script src="../dist/js/hybrid-storage.js"></script>
+<script src="../dist/js/auth-rol.js"></script>
+<script src="../dist/js/registro-proveedores.js"></script>
+</body>
+</html>

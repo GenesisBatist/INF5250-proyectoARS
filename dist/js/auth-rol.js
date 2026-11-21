@@ -3,6 +3,8 @@
     users: 'ars_users',
     afiliados: 'ars_afiliados',
     clinicas: 'ars_clinicas',
+    proveedores: 'ars_proveedores',
+    pagosProveedores: 'ars_pagos_proveedores',
     polizas: 'ars_polizas',
     autorizaciones: 'ars_autorizaciones',
     servicios: 'ars_servicios_realizados',
@@ -28,7 +30,7 @@
   function isBlank(v) { return String(v ?? '').trim() === ''; }
   function formatMoney(v) { return `RD$ ${Number(v || 0).toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`; }
   function getHomeByRole(rol) {
-    const map = { agente: 'agente-dashboard.html', clinica: 'clinica-dashboard.html', afiliado: 'afiliado-dashboard.html' };
+    const map = { agente: 'agente-dashboard.html', clinica: 'clinica-dashboard.html', afiliado: 'afiliado-dashboard.html', proveedor: 'proveedor-dashboard.html' };
     return map[rol] || 'examples/seleccion-rol.html';
   }
   function getTarifas() {
@@ -117,6 +119,10 @@
   function getAfiliados() { return read(STORAGE_KEYS.afiliados, []); }
   function setAfiliados(v) { write(STORAGE_KEYS.afiliados, v); }
   function getClinicas() { return read(STORAGE_KEYS.clinicas, []); }
+  function getProveedores() { return read(STORAGE_KEYS.proveedores, []); }
+  function setProveedores(v) { write(STORAGE_KEYS.proveedores, v); }
+  function getPagosProveedores() { return read(STORAGE_KEYS.pagosProveedores, []); }
+  function setPagosProveedores(v) { write(STORAGE_KEYS.pagosProveedores, v); }
   function setClinicas(v) { write(STORAGE_KEYS.clinicas, v); }
   function getPolizas() { return read(STORAGE_KEYS.polizas, []); }
   function setPolizas(v) { write(STORAGE_KEYS.polizas, v); }
@@ -293,6 +299,16 @@
     return { success: true, rol: 'clinica', user, clinica };
   }
 
+  async function loginProveedor(username, password) {
+    const r = await loginServidor('proveedor', String(username || '').trim(), password);
+    if (!r.success) return { success: false, message: r.message };
+    const proveedor = r.registro;
+    const user = { id: 'USR-' + proveedor.id, username: proveedor.usuario, rol: 'proveedor', nombre: proveedor.nombre, referenciaId: proveedor.id, activo: true };
+    setCurrentUser(user);
+    logAction('Inicio de sesión', `Ingreso proveedor ${proveedor.nombre}`);
+    return { success: true, rol: 'proveedor', user, proveedor };
+  }
+
   function logout() {
     const current = getCurrentUser();
     if (current) logAction('Cierre de sesión', `Salida de ${current.username}`);
@@ -424,6 +440,59 @@
     setUsers(users);
     logAction('Registrar clínica', `Clínica ${nueva.nombre}`);
     return nueva;
+  }
+
+  // RF-12: el agente registra proveedores (laboratorios, farmacias, especialistas) y les envía pagos.
+  function createProveedor(data) {
+    const proveedores = getProveedores();
+    requireFields(data, ['nombre', 'rnc', 'telefono', 'direccion', 'usuario', 'password'], {
+      nombre: 'Nombre', rnc: 'RNC', telefono: 'Teléfono', direccion: 'Dirección', usuario: 'Usuario', password: 'Contraseña'
+    });
+    const usuarioNormalizado = String(data.usuario || '').trim().toLowerCase();
+    if (proveedores.some(p => String(p.usuario || '').trim().toLowerCase() === usuarioNormalizado)) throw new Error('Ese usuario de proveedor ya existe');
+    if (proveedores.some(p => String(p.rnc || '') === String(data.rnc).trim())) throw new Error('Ese RNC ya existe');
+    const nuevo = {
+      id: generateSequentialId('PRV', proveedores),
+      nombre: data.nombre.trim(),
+      rnc: data.rnc.trim(),
+      telefono: data.telefono.trim(),
+      direccion: data.direccion.trim(),
+      tipo: String(data.tipo || 'Otro').trim(),
+      usuario: data.usuario.trim(),
+      password: data.password.trim(),
+      estado: 'activo',
+      fechaRegistro: new Date().toISOString()
+    };
+    proveedores.push(nuevo);
+    setProveedores(proveedores);
+    logAction('Registrar proveedor', `Proveedor ${nuevo.nombre}`);
+    return nuevo;
+  }
+
+  function createPagoProveedor(data) {
+    const proveedores = getProveedores();
+    const proveedor = proveedores.find(p => p.id === data.proveedorId);
+    if (!proveedor) throw new Error('Debe seleccionar un proveedor');
+    const monto = Number(data.monto);
+    if (!Number.isFinite(monto) || monto <= 0) throw new Error('El monto debe ser mayor que cero');
+    if (isBlank(data.concepto)) throw new Error('El servicio o concepto es obligatorio');
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(String(data.periodo || ''))) throw new Error('El período debe tener el formato AAAA-MM');
+    const pagos = getPagosProveedores();
+    const nuevo = {
+      id: generateSequentialId('PPR', pagos),
+      proveedorId: proveedor.id,
+      proveedorNombre: proveedor.nombre,
+      periodo: data.periodo,
+      concepto: String(data.concepto).trim(),
+      monto,
+      estado: data.estado === 'pagado' ? 'pagado' : 'pendiente',
+      fechaEnvio: new Date().toISOString(),
+      observacion: String(data.observacion || '').trim()
+    };
+    pagos.push(nuevo);
+    setPagosProveedores(pagos);
+    logAction('Registrar pago a proveedor', `${nuevo.id} para ${proveedor.nombre} por ${formatMoney(monto)}`);
+    return nuevo;
   }
 
   function createPoliza(data) {
@@ -664,10 +733,15 @@
     loginAgente,
     loginAfiliado,
     loginClinica,
+    loginProveedor,
     logout,
     getUsers,
     getAfiliados,
     getClinicas,
+    getProveedores,
+    getPagosProveedores,
+    createProveedor,
+    createPagoProveedor,
     getPolizas,
     getAutorizaciones,
     getServicios,

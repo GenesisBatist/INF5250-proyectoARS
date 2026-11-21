@@ -1,1 +1,40 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Login Afiliado</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.0.12/index.css"><link rel="stylesheet" href="../../dist/css/adminlte.css"></head><body class="login-page bg-body-secondary"><div class="login-box"><div class="card card-outline card-info"><div class="card-header text-center"><h3>Acceso Afiliado</h3></div><div class="card-body"><form id="frmAfiliado"><div class="mb-3"><label class="form-label">Cédula</label><input class="form-control" name="cedula" required></div><div class="mb-3"><label class="form-label">Contraseña</label><input type="password" class="form-control" name="password" required></div><button class="btn btn-info w-100">Ingresar</button><div class="small mt-3">El afiliado entra con su cédula y la clave creada por el agente.</div></form><div class="text-center mt-3"><a href="seleccion-rol.html">Volver</a></div></div></div></div><script src="../../dist/js/hybrid-storage.js"></script><script src="../../dist/js/auth-rol.js"></script><script>document.getElementById('frmAfiliado').addEventListener('submit',async e=>{e.preventDefault();const r=await ARSAuth.loginAfiliado(e.target.cedula.value,e.target.password.value);if(r.success){try{await Promise.all([window.ARSHybridStorage?.syncNow?.('ars_current_user'),window.ARSHybridStorage?.syncNow?.('usuario'),window.ARSHybridStorage?.syncNow?.('nombre')]);}catch(_){ }location.href='../afiliado-dashboard.html';}else alert(r.message);});</script></body></html>
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acceso Afiliado | ARS Salud</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans@5.0.8/index.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.0.12/index.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../../dist/css/adminlte.css">
+<link rel="stylesheet" href="../../dist/css/ars-ux.css">
+</head><body class="rol-afiliado">
+<div class="login-ux">
+  <section class="brand-pane">
+    <div class="brand-logo"><span class="mark"><i class="bi bi-heart-pulse-fill"></i></span>ARS Salud</div>
+    <div class="brand-copy"><h1>Consulta tu póliza y tus autorizaciones cuando las necesites</h1><p>Sistema de gestión de seguro de salud para afiliados, clínicas, proveedores y agentes.</p><ul class="brand-points"><li><i class="bi bi-check-circle-fill"></i>Revisa tu cobertura vigente</li><li><i class="bi bi-check-circle-fill"></i>Sigue el estado de tus autorizaciones</li><li><i class="bi bi-check-circle-fill"></i>Historial de tus servicios</li></ul></div>
+    <div class="brand-foot">UASD · INF-5250 · Grupo 1 – IngeniaSoft</div>
+  </section>
+  <section class="form-pane"><div class="form-card">
+    <span class="role-chip"><i class="bi bi-person-badge"></i>Afiliado</span>
+    <h2>Bienvenido</h2><p class="sub">Ingresa tus credenciales para continuar.</p>
+    <div id="loginError" class="login-error" role="alert"></div>
+    <form id="frm" novalidate>
+      <div class="mb-3"><label class="form-label" for="usuario">Cédula</label><div class="input-group"><span class="input-group-text"><i class="bi bi-person"></i></span><input class="form-control" id="usuario" name="cedula" placeholder="000-0000000-0" autocomplete="username" required></div></div>
+      <div class="mb-4"><label class="form-label" for="password">Contraseña</label><div class="input-group"><span class="input-group-text"><i class="bi bi-lock"></i></span><input type="password" class="form-control" id="password" name="password" placeholder="••••••••" autocomplete="current-password" required></div></div>
+      <button class="btn-ingresar" id="btnIngresar" type="submit">Ingresar</button>
+    </form>
+    <div class="help">Entra con tu cédula y la clave creada por el agente.</div>
+    <a class="volver" href="seleccion-rol.html"><i class="bi bi-arrow-left"></i>Elegir otro tipo de usuario</a>
+  </div></section>
+</div>
+<script src="../../dist/js/hybrid-storage.js"></script><script src="../../dist/js/auth-rol.js"></script>
+<script>
+const frm=document.getElementById('frm'),err=document.getElementById('loginError'),btn=document.getElementById('btnIngresar');
+frm.addEventListener('submit',async e=>{e.preventDefault();err.classList.remove('show');
+  const u=frm.elements['cedula'].value.trim(),p=frm.elements.password.value;
+  if(!u||!p){err.textContent='Completa el usuario y la contraseña.';err.classList.add('show');return;}
+  btn.disabled=true;btn.textContent='Ingresando…';
+  const r=await ARSAuth.loginAfiliado(u,p);
+  if(r.success){try{await Promise.all([window.ARSHybridStorage?.syncNow?.('ars_current_user'),window.ARSHybridStorage?.syncNow?.('usuario'),window.ARSHybridStorage?.syncNow?.('nombre')]);}catch(_){}location.href='../afiliado-dashboard.html';}
+  else{err.textContent=r.message||'Credenciales inválidas';err.classList.add('show');btn.disabled=false;btn.textContent='Ingresar';}
+});
+</script></body></html>
